@@ -190,10 +190,10 @@ function Home() {
     <Container>
       <HeroSection>
         <HeroContent>
-          <h1>봉봉카페에 오신 것을 환영합니다</h1>
+          <h1>카페 봉봉에 오신 것을 환영합니다</h1>
           <p>
-            최고급 원두로 만든 커피와 함께 특별한 순간을 만들어보세요.
-            봉봉카페만의 시그니처 메뉴를 지금 만나보세요.
+            특별한 순간을 위한 특별한 카페,<br />
+            카페 봉봉과 함께하세요
           </p>
           <CTAButton to="/products">메뉴 보기</CTAButton>
         </HeroContent>
