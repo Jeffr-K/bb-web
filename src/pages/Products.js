@@ -1027,7 +1027,7 @@ function Products() {
     const orderProducts = selectedProductsData.map(product => ({
       id: product.id,
       name: product.name,
-      price: product.originalPrice,
+      price: product.price || product.originalPrice, // price가 없으면 originalPrice 사용
       image: product.image,
       quantity: 1
     }));

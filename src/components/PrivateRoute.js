@@ -6,4 +6,4 @@ function PrivateRoute({ children }) {
   return isAuthenticated ? children : <Navigate to="/admin/login" />;
 }
 
-export default PrivateRoute; 
+export default PrivateRoute;
