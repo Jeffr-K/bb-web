@@ -34,7 +34,7 @@ const ProductsContainer = styled.div`
 
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
-    padding: 0 20px 40px 20px;
+    padding: 0 40px 40px 40px;  // 좌우 여백을 40px로 증가
   }
 `;
 
@@ -52,7 +52,7 @@ const Sidebar = styled.div`
     top: 60px;
     z-index: 10;
     padding: 15px;
-    margin: 0 -20px;
+    margin: 0 -32px;  // ProductsContainer의 패딩값과 동일하게 마진 조정
     border-radius: 0;
     overflow-x: auto;
     white-space: nowrap;
@@ -125,7 +125,7 @@ const ProductGrid = styled.div`
   }
 
   @media (max-width: 768px) {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;  // 한 줄에 하나의 상품만 표시
     gap: 15px;
   }
 `;
@@ -158,19 +158,31 @@ const ProductImage = styled.img`
   width: 100%;
   height: 200px;
   object-fit: cover;
+
+  @media (max-width: 768px) {
+    height: 250px;  // 모바일에서는 이미지 높이를 더 크게
+  }
 `;
 
 const ProductInfo = styled.div`
   padding: 15px;
+
+  @media (max-width: 768px) {
+    padding: 16px;  // 패딩 약간 조정
+  }
 `;
 
 const ProductName = styled(Link)`
   font-size: 1.1rem;
-  color: #2c3e50;
+  color: ${props => props.theme.colors.text.primary};
   text-decoration: none;
   font-weight: 600;
   display: block;
   margin-bottom: 10px;
+
+  @media (max-width: 768px) {
+    font-size: 0.95rem;
+  }
 
   &:hover {
     color: #e67e22;
@@ -187,29 +199,51 @@ const PriceSection = styled.div`
 const OriginalPrice = styled.span`
   color: #999;
   text-decoration: line-through;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  margin-right: 8px;
+
+  @media (max-width: 768px) {
+    font-size: 0.85rem;
+  }
 `;
 
 const DiscountPrice = styled.span`
   color: #e74c3c;
   font-weight: 600;
   font-size: 1.2rem;
+
+  @media (max-width: 768px) {
+    font-size: 1rem;
+  }
 `;
 
 const ProductStats = styled.div`
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;  // 오른쪽에서 왼쪽으로 변경
   align-items: center;
   color: #666;
   font-size: 0.9rem;
   padding-top: 10px;
   border-top: 1px solid #eee;
+
+  @media (max-width: 768px) {
+    padding-top: 8px;
+  }
 `;
 
 const Stat = styled.div`
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 3px;  // 아이콘과 텍스트 사이 간격
+  margin-right: 8px;  // margin-left에서 margin-right로 변경
+
+  &:last-child {
+    margin-right: 0;
+  }
+
+  svg {
+    font-size: 0.9rem;
+  }
 `;
 
 const MainBanner = styled.div`
@@ -241,8 +275,12 @@ const BannerContent = styled.div`
     text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
 
     @media (max-width: 768px) {
-      font-size: 1.8rem;
-      margin-bottom: 10px;
+      font-size: 1.5rem;  // 2.5rem에서 1.5rem으로 축소
+      margin-bottom: 8px;  // 여백도 축소
+    }
+
+    @media (max-width: 480px) {
+      font-size: 1.2rem;  // 더 작은 화면에서는 더 작게
     }
   }
 
@@ -252,8 +290,16 @@ const BannerContent = styled.div`
     text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
 
     @media (max-width: 768px) {
-      font-size: 1rem;
-      margin-bottom: 15px;
+      font-size: 0.9rem;  // 1.2rem에서 0.9rem으로 축소
+      margin-bottom: 12px;
+      
+      br {
+        display: none;  // 모바일에서는 줄바꿈 제거
+      }
+    }
+
+    @media (max-width: 480px) {
+      font-size: 0.8rem;  // 더 작은 화면에서는 더 작게
     }
   }
 
@@ -395,6 +441,18 @@ const BulkOrderButton = styled.button`
   }
 `;
 
+const Title = styled.h2`
+  font-size: 2rem;
+  color: #2c3e50;
+  margin-bottom: 30px;
+  text-align: center;
+
+  @media (max-width: 768px) {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+  }
+`;
+
 function Products() {
   const [selectedCategory, setSelectedCategory] = useState('전체');
   const [selectedSubCategory, setSelectedSubCategory] = useState(null);
@@ -405,7 +463,7 @@ function Products() {
   const productsPerPage = 12; // 한 페이지당 상품 수
 
   const categories = {
-    전체: ['모든 상품'],
+    전체: [],
     커피: [
       '아메리카노',
       '에스프레소',
@@ -711,7 +769,6 @@ function Products() {
     '에코백': FaTshirt,
     '파우치': FaShoppingBag,
     '스티커': FaGift,
-    '모든 상품': FaShoppingBag,
     
     // 샌드위치 하위 카테고리
     '에그모닝 샌드위치': FaHamburger,
@@ -797,9 +854,9 @@ function Products() {
     <>
       <MainBanner>
         <BannerContent>
-          <h1>봉봉카페 신메뉴 출시</h1>
+          <h1>카페 봉봉에 오신 것을 환영합니다</h1>
           <p>
-            달콤한 <span className="highlight">바닐라 시나몬 라떼</span>와 함께<br />
+            달콤한 <span className="highlight">바닐라 시나몬 라떼</span>와 함께
             특별한 가을의 순간을 만나보세요
           </p>
           <BannerButton>자세히 보기</BannerButton>
@@ -844,6 +901,7 @@ function Products() {
         </Sidebar>
 
         <div>
+          <Title>카페 봉봉 상품</Title>
           <ProductGrid>
             {currentProducts.map(product => (
               <ProductCard 
