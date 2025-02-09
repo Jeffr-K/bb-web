@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import styled from 'styled-components';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
@@ -23,6 +23,8 @@ import {
   FaCoffee as FaDrip,
   FaMugHot as FaLatte
 } from 'react-icons/fa';
+import { useMediaQuery } from 'react-responsive';
+import MobileNavBar from '../components/MobileNavBar';
 
 const ProductsContainer = styled.div`
   display: grid;
@@ -34,7 +36,8 @@ const ProductsContainer = styled.div`
 
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
-    padding: 0 40px 40px 40px;  // 좌우 여백을 40px로 증가
+    padding: 0 8px 40px 8px;
+    gap: 0;  // 모바일에서 gap 제거
   }
 `;
 
@@ -51,16 +54,11 @@ const Sidebar = styled.div`
     position: sticky;
     top: 60px;
     z-index: 10;
-    padding: 15px;
-    margin: 0 -32px;  // ProductsContainer의 패딩값과 동일하게 마진 조정
+    padding: 15px 15px 0 15px;
+    margin: 0 -8px;
     border-radius: 0;
-    overflow-x: auto;
-    white-space: nowrap;
-    -webkit-overflow-scrolling: touch;
-
-    &::-webkit-scrollbar {
-      display: none;
-    }
+    box-shadow: none;  // 모바일에서 그림자 제거
+    border-bottom: none;
   }
 `;
 
@@ -71,7 +69,9 @@ const CategoryList = styled.ul`
 
   @media (max-width: 768px) {
     display: flex;
-    gap: 10px;
+    flex-wrap: wrap;  // 여러 줄로 표시되도록 변경
+    gap: 8px;
+    padding-bottom: 15px;
   }
 `;
 
@@ -86,6 +86,11 @@ const CategoryItem = styled.li`
   display: flex;
   align-items: center;
   justify-content: space-between;
+
+  @media (max-width: 768px) {
+    padding: 8px 12px;
+    font-size: 0.9rem;  // 폰트 크기 조정
+  }
 
   .category-content {
     display: flex;
@@ -105,14 +110,47 @@ const CategoryItem = styled.li`
 
 const SubCategoryList = styled.ul`
   list-style: none;
-  padding-left: 20px;
-  margin: 5px 0;
-  display: ${props => props.isOpen ? 'block' : 'none'};
+  padding: 0;
+  margin: 10px 0;
+  display: ${props => props.isOpen ? 'flex' : 'none'};
+  flex-wrap: wrap;
+  gap: 8px;
+  background: #f8f8f8;
+  padding: 12px;
+  border-radius: 8px;
+
+  @media (max-width: 768px) {
+    padding: 8px;
+    gap: 6px;
+  }
 `;
 
-const SubCategoryItem = styled(CategoryItem)`
-  padding: 8px 15px;
+const SubCategoryItem = styled.button`
+  padding: 6px 12px;
+  background: ${props => props.active ? props.theme.colors.primary : 'white'};
+  color: ${props => props.active ? 'white' : props.theme.colors.text.primary};
+  border: 1px solid ${props => props.active ? props.theme.colors.primary : '#ddd'};
+  border-radius: 20px;
   font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  &:hover {
+    border-color: ${props => props.theme.colors.primary};
+    color: ${props => !props.active && props.theme.colors.primary};
+  }
+
+  svg {
+    font-size: 1rem;
+  }
+
+  @media (max-width: 768px) {
+    font-size: 0.8rem;
+    padding: 4px 10px;
+  }
 `;
 
 const ProductGrid = styled.div`
@@ -122,11 +160,21 @@ const ProductGrid = styled.div`
 
   @media (max-width: 1024px) {
     grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
   }
 
   @media (max-width: 768px) {
-    grid-template-columns: 1fr;  // 한 줄에 하나의 상품만 표시
-    gap: 15px;
+    grid-template-columns: repeat(3, 1fr);
+    row-gap: 24px;
+    column-gap: 6px;
+    margin-bottom: 80px;  // 하단 네비게이션바를 위한 여백 추가
+  }
+
+  @media (max-width: 480px) {
+    grid-template-columns: repeat(2, 1fr);
+    row-gap: 24px;
+    column-gap: 6px;
+    margin-bottom: 80px;  // 하단 네비게이션바를 위한 여백 유지
   }
 `;
 
@@ -142,6 +190,10 @@ const ProductCard = styled.div`
   &:hover {
     transform: translateY(-5px);
   }
+
+  @media (max-width: 768px) {
+    border-radius: 10px;  // 모바일에서는 라운딩을 좀 더 작게
+  }
 `;
 
 const SelectCheckbox = styled.input`
@@ -154,13 +206,50 @@ const SelectCheckbox = styled.input`
   z-index: 1;
 `;
 
+const ProductImageWrapper = styled.div`
+  position: relative;
+  width: 100%;
+`;
+
+const LikeButton = styled.button`
+  position: absolute;
+  bottom: 15px;
+  left: 15px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  z-index: 1;
+
+  svg {
+    font-size: 1.3rem;
+    color: ${props => props.isLiked ? '#e74c3c' : 'rgba(255, 255, 255, 0.8)'};
+    filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.3));
+    transition: all 0.2s ease;
+  }
+
+  &:hover {
+    transform: scale(1.1);
+  }
+
+  @media (max-width: 768px) {
+    bottom: 12px;
+    left: 12px;
+
+    svg {
+      font-size: 1rem;
+    }
+  }
+`;
+
 const ProductImage = styled.img`
   width: 100%;
   height: 200px;
   object-fit: cover;
 
   @media (max-width: 768px) {
-    height: 250px;  // 모바일에서는 이미지 높이를 더 크게
+    height: 150px;  // 모바일에서는 이미지 높이를 좀 더 작게
   }
 `;
 
@@ -168,7 +257,7 @@ const ProductInfo = styled.div`
   padding: 15px;
 
   @media (max-width: 768px) {
-    padding: 16px;  // 패딩 약간 조정
+    padding: 8px 8px 4px 8px;  // 하단 패딩을 더 줄임
   }
 `;
 
@@ -192,42 +281,36 @@ const ProductName = styled(Link)`
 const PriceSection = styled.div`
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
-`;
-
-const OriginalPrice = styled.span`
-  color: #999;
-  text-decoration: line-through;
-  font-size: 0.95rem;
-  margin-right: 8px;
+  margin-bottom: 6px;
 
   @media (max-width: 768px) {
-    font-size: 0.85rem;
+    margin-bottom: 4px;
   }
 `;
 
-const DiscountPrice = styled.span`
-  color: #e74c3c;
+const Price = styled.span`
+  color: ${props => props.theme.colors.text.primary};
   font-weight: 600;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
 
   @media (max-width: 768px) {
-    font-size: 1rem;
+    font-size: 0.9rem;  // 1rem에서 0.9rem으로 축소
   }
 `;
 
 const ProductStats = styled.div`
   display: flex;
-  justify-content: flex-start;  // 오른쪽에서 왼쪽으로 변경
+  justify-content: flex-start;
   align-items: center;
   color: #666;
   font-size: 0.9rem;
-  padding-top: 10px;
+  padding-top: 6px;  // 상단 패딩 축소
   border-top: 1px solid #eee;
+  margin-bottom: 0;  // 하단 마진 제거
 
   @media (max-width: 768px) {
-    padding-top: 8px;
+    padding-top: 4px;  // 모바일에서 더 작게
+    margin-bottom: 0;
   }
 `;
 
@@ -330,13 +413,11 @@ const BannerButton = styled.button`
 const Pagination = styled.div`
   display: flex;
   justify-content: center;
-  align-items: center;
-  margin-top: 40px;
   gap: 10px;
+  margin-top: 40px;
 
   @media (max-width: 768px) {
-    margin-top: 30px;
-    gap: 5px;
+    display: none;  // 모바일에서는 페이지네이션 숨김
   }
 `;
 
@@ -444,23 +525,301 @@ const BulkOrderButton = styled.button`
 const Title = styled.h2`
   font-size: 2rem;
   color: #2c3e50;
-  margin-bottom: 30px;
+  margin: 40px 0 30px 0;  // 상단 마진 추가
   text-align: center;
 
   @media (max-width: 768px) {
     font-size: 1.5rem;
-    margin-bottom: 20px;
+    margin: 30px 0 20px 0;  // 모바일에서는 약간 줄임
   }
 `;
+
+// 모바일용 하위 카테고리 컨테이너
+const MobileSubCategoryContainer = styled.div`
+  display: none;
+
+  @media (max-width: 768px) {
+    display: block;
+    margin: 0 -8px;
+    padding: 15px;
+    background: ${props => props.theme.colors.background};
+    border-bottom: 1px solid #eee;
+  }
+`;
+
+const MobileSubCategoryTitle = styled.div`
+  font-size: 0.9rem;
+  color: ${props => props.theme.colors.text.secondary};
+  margin-bottom: 10px;
+`;
+
+const MobileSubCategoryList = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+`;
+
+const MobileSubCategoryItem = styled.button`
+  padding: 6px 12px;
+  background: ${props => props.active ? props.theme.colors.primary : 'white'};
+  color: ${props => props.active ? 'white' : props.theme.colors.text.primary};
+  border: 1px solid ${props => props.active ? props.theme.colors.primary : '#ddd'};
+  border-radius: 20px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  &:hover {
+    border-color: ${props => props.theme.colors.primary};
+    color: ${props => !props.active && props.theme.colors.primary};
+  }
+
+  svg {
+    font-size: 0.9rem;
+  }
+`;
+
+// 로딩 인디케이터 추가
+const LoadingIndicator = styled.div`
+  text-align: center;
+  padding: 20px;
+  color: #666;
+  font-size: 0.9rem;
+  
+  @media (min-width: 769px) {
+    display: none;  // 데스크톱에서는 숨김
+  }
+`;
+
+// 상품 데이터를 컴포넌트 외부로 이동
+const products = [
+  {
+    id: 1,
+    name: '봉봉 시그니처 라떼',
+    originalPrice: 7000,
+    image: 'https://images.unsplash.com/photo-1541167760496-1628856ab772?ixlib=rb-4.0.3',
+    reviews: 128,
+    likes: 342,
+    category: '라떼'
+  },
+  {
+    id: 2,
+    name: '아메리카노',
+    originalPrice: 4500,
+    image: 'https://images.unsplash.com/photo-1520031441872-265e4ff70366?ixlib=rb-4.0.3',
+    reviews: 256,
+    likes: 421,
+    category: '커피'
+  },
+  {
+    id: 3,
+    name: '카페모카',
+    originalPrice: 6000,
+    image: 'https://images.unsplash.com/photo-1572490122747-3968b75cc699?ixlib=rb-4.0.3',
+    reviews: 89,
+    likes: 156,
+    category: '커피'
+  },
+  {
+    id: 4,
+    name: '딸기 스무디',
+    originalPrice: 6500,
+    image: 'https://images.unsplash.com/photo-1553530666-ba11a7da3888?ixlib=rb-4.0.3',
+    reviews: 67,
+    likes: 98,
+    category: '스무디'
+  },
+  {
+    id: 5,
+    name: '망고 스무디',
+    originalPrice: 6500,
+    image: 'https://images.unsplash.com/photo-1623065422902-30a2d299bbe4?ixlib=rb-4.0.3',
+    reviews: 45,
+    likes: 87,
+    category: '스무디'
+  },
+  {
+    id: 6,
+    name: '레몬 에이드',
+    originalPrice: 5500,
+    image: 'https://images.unsplash.com/photo-1621263764928-df1444c5e859?ixlib=rb-4.0.3',
+    reviews: 78,
+    likes: 134,
+    category: '에이드'
+  },
+  {
+    id: 7,
+    name: '청포도 에이드',
+    originalPrice: 5500,
+    image: 'https://images.unsplash.com/photo-1567861911437-538298e4232c?ixlib=rb-4.0.3',
+    reviews: 92,
+    likes: 167,
+    category: '에이드'
+  },
+  {
+    id: 8,
+    name: '티라미수',
+    originalPrice: 7000,
+    image: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?ixlib=rb-4.0.3',
+    reviews: 156,
+    likes: 289,
+    category: '디저트'
+  },
+  {
+    id: 9,
+    name: '초코 브라우니',
+    originalPrice: 5500,
+    image: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?ixlib=rb-4.0.3',
+    reviews: 112,
+    likes: 245,
+    category: '디저트'
+  },
+  {
+    id: 10,
+    name: '아보카도 토스트',
+    originalPrice: 8500,
+    image: 'https://images.unsplash.com/photo-1541519227354-08fa5d50c44d?ixlib=rb-4.0.3',
+    reviews: 67,
+    likes: 143,
+    category: '브런치'
+  },
+  {
+    id: 11,
+    name: '에그 베네딕트',
+    originalPrice: 12000,
+    image: 'https://images.unsplash.com/photo-1608039829572-78524f79c4c7?ixlib=rb-4.0.3',
+    reviews: 89,
+    likes: 178,
+    category: '브런치'
+  },
+  {
+    id: 12,
+    name: '봉봉 텀블러',
+    originalPrice: 28000,
+    image: 'https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?ixlib=rb-4.0.3',
+    reviews: 45,
+    likes: 98,
+    category: '굿즈'
+  },
+  {
+    id: 13,
+    name: '바닐라 라떼',
+    originalPrice: 6000,
+    image: 'https://images.unsplash.com/photo-1572442388796-11668a67e53d?ixlib=rb-4.0.3',
+    reviews: 156,
+    likes: 267,
+    category: '라떼'
+  },
+  {
+    id: 14,
+    name: '카라멜 마끼아또',
+    originalPrice: 6000,
+    image: 'https://images.unsplash.com/photo-1589396575653-c09c794ff6a6?ixlib=rb-4.0.3',
+    reviews: 134,
+    likes: 245,
+    category: '라떼'
+  },
+  {
+    id: 15,
+    name: '콜드브루',
+    originalPrice: 5500,
+    image: 'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?ixlib=rb-4.0.3',
+    reviews: 198,
+    likes: 312,
+    category: '커피'
+  },
+  {
+    id: 16,
+    name: '봉봉 에코백',
+    originalPrice: 18000,
+    image: 'https://images.unsplash.com/photo-1597484662317-9bd7bdda2907?ixlib=rb-4.0.3',
+    reviews: 34,
+    likes: 76,
+    category: '굿즈'
+  },
+  {
+    id: 17,
+    name: '블루베리 치즈케이크',
+    originalPrice: 6500,
+    image: 'https://images.unsplash.com/photo-1533134242443-d4fd215305ad?ixlib=rb-4.0.3',
+    reviews: 178,
+    likes: 289,
+    category: '디저트'
+  },
+  {
+    id: 18,
+    name: '크로플',
+    originalPrice: 5000,
+    image: 'https://images.unsplash.com/photo-1586985289688-ca3cf47d3e6e?ixlib=rb-4.0.3',
+    reviews: 145,
+    likes: 234,
+    category: '디저트'
+  },
+  {
+    id: 19,
+    name: '봉봉 머그컵',
+    originalPrice: 15000,
+    image: 'https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?ixlib=rb-4.0.3',
+    reviews: 67,
+    likes: 123,
+    category: '굿즈'
+  },
+  {
+    id: 20,
+    name: '허니 브레드',
+    originalPrice: 9000,
+    image: 'https://images.unsplash.com/photo-1484723091739-30a097e8f929?ixlib=rb-4.0.3',
+    reviews: 89,
+    likes: 156,
+    category: '디저트'
+  }
+];
 
 function Products() {
   const [selectedCategory, setSelectedCategory] = useState('전체');
   const [selectedSubCategory, setSelectedSubCategory] = useState(null);
   const [openCategories, setOpenCategories] = useState(['전체']);
   const [selectedProducts, setSelectedProducts] = useState([]);
-  const navigate = useNavigate();
+  const [likedProducts, setLikedProducts] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const productsPerPage = 12; // 한 페이지당 상품 수
+  const [currentProducts, setCurrentProducts] = useState([]);
+  const productsPerPage = 12;
+  const isMobile = useMediaQuery({ maxWidth: 768 });
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const observer = useRef();
+  const navigate = useNavigate();
+  
+  // 총 페이지 수 계산
+  const totalPages = Math.ceil(products.length / productsPerPage);
+
+  // 초기 데이터 로드 및 페이지네이션/무한스크롤 처리
+  useEffect(() => {
+    if (isMobile) {
+      setCurrentProducts(products.slice(0, productsPerPage));
+    } else {
+      const indexOfLastProduct = currentPage * productsPerPage;
+      const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
+      setCurrentProducts(products.slice(indexOfFirstProduct, indexOfLastProduct));
+    }
+  }, [currentPage, isMobile]);
+
+  // 마지막 아이템 참조 콜백
+  const lastProductRef = useCallback(node => {
+    if (isLoading) return;
+    if (observer.current) observer.current.disconnect();
+    
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore && isMobile) {
+        loadMoreProducts();
+      }
+    });
+    
+    if (node) observer.current.observe(node);
+  }, [isLoading, hasMore, isMobile]);
 
   const categories = {
     전체: [],
@@ -526,189 +885,6 @@ function Products() {
       '몬테크리스토 샌드위치'
     ]
   };
-
-  const products = [
-    {
-      id: 1,
-      name: '봉봉 시그니처 라떼',
-      originalPrice: 7000,
-      discountPrice: 6500,
-      image: 'https://images.unsplash.com/photo-1541167760496-1628856ab772?ixlib=rb-4.0.3',
-      reviews: 128,
-      likes: 342,
-      category: '라떼'
-    },
-    {
-      id: 2,
-      name: '아메리카노',
-      originalPrice: 4500,
-      discountPrice: 4000,
-      image: 'https://images.unsplash.com/photo-1520031441872-265e4ff70366?ixlib=rb-4.0.3',
-      reviews: 256,
-      likes: 421,
-      category: '커피'
-    },
-    {
-      id: 3,
-      name: '카페모카',
-      originalPrice: 6000,
-      discountPrice: 5500,
-      image: 'https://images.unsplash.com/photo-1572490122747-3968b75cc699?ixlib=rb-4.0.3',
-      reviews: 89,
-      likes: 156,
-      category: '커피'
-    },
-    {
-      id: 4,
-      name: '딸기 스무디',
-      originalPrice: 6500,
-      discountPrice: 6000,
-      image: 'https://images.unsplash.com/photo-1553530666-ba11a7da3888?ixlib=rb-4.0.3',
-      reviews: 67,
-      likes: 98,
-      category: '스무디'
-    },
-    {
-      id: 5,
-      name: '망고 스무디',
-      originalPrice: 6500,
-      discountPrice: 6000,
-      image: 'https://images.unsplash.com/photo-1623065422902-30a2d299bbe4?ixlib=rb-4.0.3',
-      reviews: 45,
-      likes: 87,
-      category: '스무디'
-    },
-    {
-      id: 6,
-      name: '레몬 에이드',
-      originalPrice: 5500,
-      discountPrice: 5000,
-      image: 'https://images.unsplash.com/photo-1621263764928-df1444c5e859?ixlib=rb-4.0.3',
-      reviews: 78,
-      likes: 134,
-      category: '에이드'
-    },
-    {
-      id: 7,
-      name: '청포도 에이드',
-      originalPrice: 5500,
-      discountPrice: 5000,
-      image: 'https://images.unsplash.com/photo-1567861911437-538298e4232c?ixlib=rb-4.0.3',
-      reviews: 92,
-      likes: 167,
-      category: '에이드'
-    },
-    {
-      id: 8,
-      name: '티라미수',
-      originalPrice: 7000,
-      discountPrice: 6500,
-      image: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?ixlib=rb-4.0.3',
-      reviews: 156,
-      likes: 289,
-      category: '디저트'
-    },
-    {
-      id: 9,
-      name: '초코 브라우니',
-      originalPrice: 5500,
-      discountPrice: 5000,
-      image: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?ixlib=rb-4.0.3',
-      reviews: 112,
-      likes: 245,
-      category: '디저트'
-    },
-    {
-      id: 10,
-      name: '아보카도 토스트',
-      originalPrice: 8500,
-      discountPrice: 8000,
-      image: 'https://images.unsplash.com/photo-1541519227354-08fa5d50c44d?ixlib=rb-4.0.3',
-      reviews: 67,
-      likes: 143,
-      category: '브런치'
-    },
-    {
-      id: 11,
-      name: '에그 베네딕트',
-      originalPrice: 12000,
-      discountPrice: 11000,
-      image: 'https://images.unsplash.com/photo-1608039829572-78524f79c4c7?ixlib=rb-4.0.3',
-      reviews: 89,
-      likes: 178,
-      category: '브런치'
-    },
-    {
-      id: 12,
-      name: '봉봉 텀블러',
-      originalPrice: 28000,
-      discountPrice: 25000,
-      image: 'https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?ixlib=rb-4.0.3',
-      reviews: 45,
-      likes: 98,
-      category: '굿즈'
-    },
-    {
-      id: 13,
-      name: '바닐라 라떼',
-      originalPrice: 6000,
-      discountPrice: 5500,
-      image: 'https://images.unsplash.com/photo-1572442388796-11668a67e53d?ixlib=rb-4.0.3',
-      reviews: 156,
-      likes: 267,
-      category: '라떼'
-    },
-    {
-      id: 14,
-      name: '카라멜 마끼아또',
-      originalPrice: 6000,
-      discountPrice: 5500,
-      image: 'https://images.unsplash.com/photo-1589396575653-c09c794ff6a6?ixlib=rb-4.0.3',
-      reviews: 134,
-      likes: 245,
-      category: '라떼'
-    },
-    {
-      id: 15,
-      name: '콜드브루',
-      originalPrice: 5500,
-      discountPrice: 5000,
-      image: 'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?ixlib=rb-4.0.3',
-      reviews: 198,
-      likes: 312,
-      category: '커피'
-    },
-    {
-      id: 16,
-      name: '봉봉 에코백',
-      originalPrice: 18000,
-      discountPrice: 15000,
-      image: 'https://images.unsplash.com/photo-1597484662317-9bd7bdda2907?ixlib=rb-4.0.3',
-      reviews: 34,
-      likes: 76,
-      category: '굿즈'
-    },
-    {
-      id: 17,
-      name: '블루베리 치즈케이크',
-      originalPrice: 6500,
-      discountPrice: 6000,
-      image: 'https://images.unsplash.com/photo-1533134242443-d4fd215305ad?ixlib=rb-4.0.3',
-      reviews: 178,
-      likes: 289,
-      category: '디저트'
-    },
-    {
-      id: 18,
-      name: '크로플',
-      originalPrice: 5000,
-      discountPrice: 4500,
-      image: 'https://images.unsplash.com/photo-1586985289688-ca3cf47d3e6e?ixlib=rb-4.0.3',
-      reviews: 145,
-      likes: 234,
-      category: '디저트'
-    }
-  ];
 
   const categoryIcons = {
     전체: FaShoppingBag,
@@ -814,18 +990,10 @@ function Products() {
     navigate(`/product/${productId}`);
   };
 
-  // 현재 페이지의 상품들 계산
-  const indexOfLastProduct = currentPage * productsPerPage;
-  const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
-  const currentProducts = products.slice(indexOfFirstProduct, indexOfLastProduct);
-
-  // 총 페이지 수 계산
-  const totalPages = Math.ceil(products.length / productsPerPage);
-
   // 페이지 변경 핸들러
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
-    window.scrollTo(0, 0); // 페이지 상단으로 스크롤
+    window.scrollTo(0, 0);
   };
 
   const selectedProductsData = products.filter(product => 
@@ -850,6 +1018,40 @@ function Products() {
     setSelectedProducts(selectedProducts.filter(id => id !== productId));
   };
 
+  const toggleLike = (e, productId) => {
+    e.stopPropagation();
+    setLikedProducts(prev => 
+      prev.includes(productId)
+        ? prev.filter(id => id !== productId)
+        : [...prev, productId]
+    );
+  };
+
+  // 추가 상품 로드 함수
+  const loadMoreProducts = () => {
+    if (!hasMore || isLoading) return;
+    
+    setIsLoading(true);
+    setTimeout(() => {
+      const newProducts = products.slice(currentProducts.length, currentProducts.length + 6);
+      if (newProducts.length > 0) {
+        setCurrentProducts(prev => [...prev, ...newProducts]);
+      } else {
+        setHasMore(false);
+      }
+      setIsLoading(false);
+    }, 1000);
+  };
+
+  const handleCategorySelect = (mainCategory, subCategory) => {
+    if (mainCategory) {
+      setSelectedCategory(mainCategory);
+      if (subCategory) {
+        setSelectedSubCategory(subCategory);
+      }
+    }
+  };
+
   return (
     <>
       <MainBanner>
@@ -865,47 +1067,49 @@ function Products() {
       <ProductsContainer>
         <Sidebar>
           <CategoryList>
-            {Object.entries(categories).map(([category, subCategories]) => (
-              <React.Fragment key={category}>
-                <CategoryItem
-                  active={category === selectedCategory}
-                  onClick={() => handleCategoryClick(category)}
-                >
-                  <div className="category-content">
-                    {React.createElement(categoryIcons[category], { className: 'icon' })}
-                    {category}
-                  </div>
-                  {category !== '전체' && (
-                    openCategories.includes(category) ? 
-                      <FaChevronDown /> : 
-                      <FaChevronRight />
-                  )}
-                </CategoryItem>
-                <SubCategoryList isOpen={openCategories.includes(category)}>
-                  {subCategories.map(subCategory => (
-                    <SubCategoryItem
-                      key={subCategory}
-                      active={subCategory === selectedSubCategory}
-                      onClick={() => handleSubCategoryClick(subCategory)}
-                    >
-                      <div className="category-content">
-                        {React.createElement(subCategoryIcons[subCategory], { className: 'icon' })}
-                        {subCategory}
-                      </div>
-                    </SubCategoryItem>
-                  ))}
-                </SubCategoryList>
-              </React.Fragment>
+            {Object.entries(categories).map(([category]) => (
+              <CategoryItem
+                key={category}
+                active={category === selectedCategory}
+                onClick={() => handleCategoryClick(category)}
+              >
+                <div className="category-content">
+                  {React.createElement(categoryIcons[category], { className: 'icon' })}
+                  {category}
+                </div>
+              </CategoryItem>
             ))}
           </CategoryList>
         </Sidebar>
 
+        {/* 모바일용 하위 카테고리 컨테이너 추가 */}
+        {selectedCategory !== '전체' && categories[selectedCategory]?.length > 0 && (
+          <MobileSubCategoryContainer>
+            <MobileSubCategoryTitle>
+              {selectedCategory} 카테고리
+            </MobileSubCategoryTitle>
+            <MobileSubCategoryList>
+              {categories[selectedCategory].map(subCategory => (
+                <MobileSubCategoryItem
+                  key={subCategory}
+                  active={subCategory === selectedSubCategory}
+                  onClick={() => handleSubCategoryClick(subCategory)}
+                >
+                  {React.createElement(subCategoryIcons[subCategory], { className: 'icon' })}
+                  {subCategory}
+                </MobileSubCategoryItem>
+              ))}
+            </MobileSubCategoryList>
+          </MobileSubCategoryContainer>
+        )}
+
         <div>
           <Title>카페 봉봉 상품</Title>
           <ProductGrid>
-            {currentProducts.map(product => (
-              <ProductCard 
+            {currentProducts.map((product, index) => (
+              <ProductCard
                 key={product.id}
+                ref={isMobile && index === currentProducts.length - 1 ? lastProductRef : null}
                 onClick={(e) => handleCardClick(e, product.id)}
               >
                 <SelectCheckbox
@@ -916,21 +1120,28 @@ function Products() {
                     handleProductSelect(product.id);
                   }}
                 />
-                <ProductImage src={product.image} alt={product.name} />
+                <ProductImageWrapper>
+                  <LikeButton 
+                    isLiked={likedProducts.includes(product.id)}
+                    onClick={(e) => toggleLike(e, product.id)}
+                  >
+                    <FaHeart />
+                  </LikeButton>
+                  <ProductImage src={product.image} alt={product.name} />
+                </ProductImageWrapper>
                 <ProductInfo>
                   <ProductName as="span">
                     {product.name}
                   </ProductName>
                   <PriceSection>
-                    <OriginalPrice>{product.originalPrice.toLocaleString()}원</OriginalPrice>
-                    <DiscountPrice>{product.discountPrice.toLocaleString()}원</DiscountPrice>
+                    <Price>{product.originalPrice.toLocaleString()}원</Price>
                   </PriceSection>
                   <ProductStats>
                     <Stat>
-                      <FaComments /> {product.reviews}
+                      <FaHeart style={{ color: '#e74c3c' }} /> {product.likes}
                     </Stat>
                     <Stat>
-                      <FaHeart style={{ color: '#e74c3c' }} /> {product.likes}
+                      <FaComments /> {product.reviews}
                     </Stat>
                   </ProductStats>
                 </ProductInfo>
@@ -938,47 +1149,55 @@ function Products() {
             ))}
           </ProductGrid>
 
-          <Pagination>
-            <PageButton 
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-            >
-              이전
-            </PageButton>
+          {isMobile && isLoading && (
+            <LoadingIndicator>
+              상품을 불러오는 중입니다...
+            </LoadingIndicator>
+          )}
 
-            {[...Array(totalPages)].map((_, index) => {
-              const pageNum = index + 1;
-              // 현재 페이지 주변의 5개 페이지만 표시
-              if (
-                pageNum === 1 ||
-                pageNum === totalPages ||
-                (pageNum >= currentPage - 2 && pageNum <= currentPage + 2)
-              ) {
-                return (
-                  <PageButton
-                    key={pageNum}
-                    onClick={() => handlePageChange(pageNum)}
-                    active={currentPage === pageNum}
-                  >
-                    {pageNum}
-                  </PageButton>
-                );
-              } else if (
-                pageNum === currentPage - 3 ||
-                pageNum === currentPage + 3
-              ) {
-                return <PageInfo key={pageNum}>...</PageInfo>;
-              }
-              return null;
-            })}
+          {!isMobile && (
+            <Pagination>
+              <PageButton 
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                이전
+              </PageButton>
 
-            <PageButton 
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-            >
-              다음
-            </PageButton>
-          </Pagination>
+              {[...Array(totalPages)].map((_, index) => {
+                const pageNum = index + 1;
+                // 현재 페이지 주변의 5개 페이지만 표시
+                if (
+                  pageNum === 1 ||
+                  pageNum === totalPages ||
+                  (pageNum >= currentPage - 2 && pageNum <= currentPage + 2)
+                ) {
+                  return (
+                    <PageButton
+                      key={pageNum}
+                      onClick={() => handlePageChange(pageNum)}
+                      active={currentPage === pageNum}
+                    >
+                      {pageNum}
+                    </PageButton>
+                  );
+                } else if (
+                  pageNum === currentPage - 3 ||
+                  pageNum === currentPage + 3
+                ) {
+                  return <PageInfo key={pageNum}>...</PageInfo>;
+                }
+                return null;
+              })}
+
+              <PageButton 
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+              >
+                다음
+              </PageButton>
+            </Pagination>
+          )}
         </div>
       </ProductsContainer>
 
@@ -1008,6 +1227,12 @@ function Products() {
           단체 주문하기
         </BulkOrderButton>
       </BulkOrderBar>
+      <MobileNavBar 
+        categories={categories}
+        categoryIcons={categoryIcons}
+        subCategoryIcons={subCategoryIcons}
+        onCategorySelect={handleCategorySelect}
+      />
     </>
   );
 }

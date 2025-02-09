@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import Products from './pages/Products';
@@ -13,6 +13,9 @@ import styled from 'styled-components';
 import Locations from './pages/Locations';
 import Footer from './components/Footer';
 import GlobalStyle from './styles/GlobalStyle';
+import MobileNavBar from './components/MobileNavBar';
+import { useMediaQuery } from 'react-responsive';
+import { categories, categoryIcons, subCategoryIcons } from './data/categories';
 
 const PageContainer = styled.div`
   padding-top: ${props => props.noTopPadding ? '0' : '60px'};
@@ -35,9 +38,21 @@ const Nav = styled.nav`
   }
 `;
 
-function App() {
+function AppContent() {
+  const isMobile = useMediaQuery({ maxWidth: 768 });
+  const navigate = useNavigate();
+
+  const handleCategorySelect = (mainCategory, subCategory) => {
+    navigate('/products', { 
+      state: { 
+        selectedCategory: mainCategory,
+        selectedSubCategory: subCategory 
+      }
+    });
+  };
+
   return (
-    <Router>
+    <>
       <GlobalStyle />
       <Navbar />
       <PageContainer noTopPadding={window.location.pathname === '/locations'}>
@@ -61,7 +76,21 @@ function App() {
           <Route path="/locations" element={<Locations />} />
         </Routes>
       </PageContainer>
-      <Footer />
+      {!isMobile && <Footer />}
+      <MobileNavBar 
+        categories={categories}
+        categoryIcons={categoryIcons}
+        subCategoryIcons={subCategoryIcons}
+        onCategorySelect={handleCategorySelect}
+      />
+    </>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <AppContent />
     </Router>
   );
 }

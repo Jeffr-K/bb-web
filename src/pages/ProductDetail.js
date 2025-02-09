@@ -1,9 +1,21 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import { useCart } from '../context/CafeContext';
 import { FaUsers, FaChevronLeft, FaChevronRight, FaInfoCircle, FaMapMarkerAlt, FaExclamationTriangle, FaQuestionCircle, FaShoppingCart, FaStar, FaReply } from 'react-icons/fa';
 import InquiryModal from '../components/InquiryModal';
+
+// fadeIn 애니메이션 정의
+const fadeIn = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
 
 const PageContainer = styled.div`
   max-width: 1200px;
@@ -166,38 +178,72 @@ const BulkOrderButton = styled.button`
 `;
 
 const DetailSection = styled.div`
-  border-top: 1px solid #eee;
-  padding-top: 60px;
+  padding: 0 20px;
+
+  @media (max-width: 768px) {
+    padding: 0 16px;
+  }
 `;
 
-const TabContainer = styled.div`
-  border-bottom: 1px solid #ddd;
+const TabMenu = styled.div`
   display: flex;
-  gap: 10px;
+  gap: 40px;
+  border-bottom: 1px solid #ddd;
   margin-bottom: 40px;
-  justify-content: center;
+
+  @media (max-width: 768px) {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);  // 2열 그리드
+    gap: 1px;
+    background: #eee;  // 그리드 라인 색상
+    border: 1px solid #eee;
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 0 10px 30px 10px;
+  }
 `;
 
 const Tab = styled.button`
-  padding: 15px 25px;
-  border: none;
+  padding: 15px 10px;
   background: none;
+  border: none;
   font-size: 1.1rem;
-  color: ${props => props.active ? '#e67e22' : '#666'};
-  border-bottom: 3px solid ${props => props.active ? '#e67e22' : 'transparent'};
+  color: ${props => props.active ? props.theme.colors.primary : '#666'};
+  font-weight: ${props => props.active ? '600' : 'normal'};
+  border-bottom: 2px solid ${props => props.active ? props.theme.colors.primary : 'transparent'};
   cursor: pointer;
   transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
 
-  &:hover {
-    color: #e67e22;
+  @media (max-width: 768px) {
+    font-size: 0.9rem;
+    padding: 15px 10px;
+    background: white;
+    border: none;
+    border-radius: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    color: ${props => props.active ? props.theme.colors.primary : '#666'};
+    font-weight: ${props => props.active ? '600' : 'normal'};
+
+    svg {
+      font-size: 1rem;
+    }
+
+    &:active {
+      background: #f8f8f8;
+    }
   }
 `;
 
 const TabContent = styled.div`
   display: ${props => props.active ? 'block' : 'none'};
+  animation: ${fadeIn} 0.5s ease-out;
+
+  @media (max-width: 768px) {
+    padding: 20px 0;
+  }
 `;
 
 const DetailContent = styled.div`
@@ -304,6 +350,22 @@ const InquiryList = styled.div`
 const ReviewContainer = styled.div`
   max-width: 800px;
   margin: 0 auto;
+
+  @media (max-width: 768px) {
+    .review-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .review-content {
+      font-size: 0.9rem;
+    }
+
+    .review-meta {
+      font-size: 0.8rem;
+    }
+  }
 `;
 
 const ReviewCard = styled.div`
@@ -785,7 +847,7 @@ function ProductDetail() {
       </ProductDetailContainer>
 
       <DetailSection>
-        <TabContainer>
+        <TabMenu>
           <Tab 
             active={activeTab === 'detail'} 
             onClick={() => setActiveTab('detail')}
@@ -816,7 +878,7 @@ function ProductDetail() {
           >
             <FaStar /> 상품 리뷰
           </Tab>
-        </TabContainer>
+        </TabMenu>
 
         <TabContent active={activeTab === 'detail'}>
           <DetailContent>

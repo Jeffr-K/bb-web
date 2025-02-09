@@ -5,9 +5,12 @@ import { FaFacebook, FaInstagram, FaYoutube, FaTwitter } from 'react-icons/fa';
 
 const FooterContainer = styled.footer`
   background: #2c3e50;
-  color: #ecf0f1;
-  padding: 60px 0 30px;
-  margin-top: 80px;
+  color: white;
+  padding: 40px 20px;
+
+  @media (max-width: 768px) {
+    display: none;  // 모바일에서 푸터 숨김
+  }
 `;
 
 const FooterContent = styled.div`
