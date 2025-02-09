@@ -26,6 +26,113 @@ import {
 import { useMediaQuery } from 'react-responsive';
 import MobileNavBar from '../components/MobileNavBar';
 
+// 카테고리 정의
+const categories = {
+  전체: [],
+  커피: [
+    '아메리카노',
+    '에스프레소',
+    '콜드브루',
+    '드립커피'
+  ],
+  라떼: [
+    '카페라떼',
+    '바닐라라떼',
+    '카라멜라떼',
+    '헤이즐넛라떼',
+    '티라떼'
+  ],
+  스무디: [
+    '과일스무디',
+    '요거트스무디',
+    '커피스무디',
+    '프라페'
+  ],
+  에이드: [
+    '레몬에이드',
+    '자몽에이드',
+    '청포도에이드',
+    '패션후르츠에이드'
+  ],
+  디저트: [
+    '케이크',
+    '마카롱',
+    '쿠키',
+    '브라우니',
+    '크로플',
+    '스콘'
+  ],
+  브런치: [
+    '에그베네딕트',
+    '토스트',
+    '베이글',
+    '오믈렛',
+    '에그모닝 샌드위치',
+    '베이컨햄치즈 샌드위치',
+    '치킨데리야끼 샌드위치',
+    '그릴드치즈 샌드위치',
+    '클럽 샌드위치',
+    'BLT 샌드위치',
+    '아보카도 샌드위치',
+    '연어 샌드위치'
+  ]
+};
+
+// 카테고리 아이콘 매핑
+const categoryIcons = {
+  전체: FaShoppingBag,
+  커피: FaCoffee,
+  라떼: FaMugHot,
+  스무디: FaIceCream,
+  에이드: FaCocktail,
+  디저트: FaBirthdayCake,
+  브런치: FaHamburger
+};
+
+// 서브카테고리 아이콘 매핑
+const subCategoryIcons = {
+  '아메리카노': FaCoffee,
+  '에스프레소': FaMugHot,
+  '콜드브루': FaGlassWhiskey,
+  '드립커피': FaDrip,
+  '카페라떼': FaLatte,
+  '바닐라라떼': FaLatte,
+  '카라멜라떼': FaLatte,
+  '헤이즐넛라떼': FaLatte,
+  '티라떼': FaLeaf,
+  '과일스무디': FaWineGlass,
+  '요거트스무디': FaWineGlass,
+  '커피스무디': FaGlassWhiskey,
+  '프라페': FaGlassWhiskey,
+  '레몬에이드': FaCocktail,
+  '자몽에이드': FaCocktail,
+  '청포도에이드': FaCocktail,
+  '패션후르츠에이드': FaCocktail,
+  '케이크': FaBirthdayCake,
+  '마카롱': FaCookie,
+  '쿠키': FaCookie,
+  '브라우니': FaCookie,
+  '크로플': FaBreadSlice,
+  '스콘': FaBreadSlice,
+  '에그베네딕트': FaBreadSlice,
+  '토스트': FaBreadSlice,
+  '베이글': FaBreadSlice,
+  '오믈렛': FaBreadSlice,
+  '텀블러': FaMugHot,
+  '머그컵': FaMugHot,
+  '에코백': FaTshirt,
+  '파우치': FaShoppingBag,
+  '스티커': FaGift,
+  '에그모닝 샌드위치': FaHamburger,
+  '베이컨햄치즈 샌드위치': FaHamburger,
+  '치킨데리야끼 샌드위치': FaHamburger,
+  '그릴드치즈 샌드위치': FaHamburger,
+  '클럽 샌드위치': FaHamburger,
+  'BLT 샌드위치': FaHamburger,
+  '아보카도 샌드위치': FaHamburger,
+  '연어 샌드위치': FaHamburger
+};
+
 const ProductsContainer = styled.div`
   display: grid;
   grid-template-columns: 2fr 8fr;
@@ -167,14 +274,14 @@ const ProductGrid = styled.div`
     grid-template-columns: repeat(3, 1fr);
     row-gap: 24px;
     column-gap: 6px;
-    margin-bottom: 80px;  // 하단 네비게이션바를 위한 여백 추가
+    margin-bottom: 180px;  // 하단 여백 증가
   }
 
   @media (max-width: 480px) {
     grid-template-columns: repeat(2, 1fr);
     row-gap: 24px;
     column-gap: 6px;
-    margin-bottom: 80px;  // 하단 네비게이션바를 위한 여백 유지
+    margin-bottom: 180px;  // 하단 여백 증가
   }
 `;
 
@@ -449,39 +556,57 @@ const PageInfo = styled.span`
 
 const BulkOrderBar = styled.div`
   position: fixed;
-  bottom: 0;
+  bottom: ${props => props.show ? '56px' : '-200px'};  // 60px → 56px로 수정
   left: 0;
   right: 0;
   background: white;
   padding: 15px 20px;
   box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+  transition: bottom 0.3s ease-in-out;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  transform: translateY(${props => props.show ? '0' : '100%'});
-  transition: transform 0.3s ease-in-out;
-  z-index: 1000;
+  z-index: 1001;
 
   @media (max-width: 768px) {
-    padding: 10px;
-    flex-direction: column;
-    gap: 10px;
+    padding: 12px 16px;
+    bottom: ${props => props.show ? '56px' : '-200px'};  // 60px → 56px로 수정
+    min-height: 100px;
   }
 `;
 
 const SelectedInfo = styled.div`
+  flex: 1;
   display: flex;
-  align-items: center;
-  gap: 20px;
+  flex-direction: column;
+  gap: 8px;
+
+  .count {
+    font-size: 1.1rem;
+    color: ${props => props.theme.colors.text.primary};
+    font-weight: 500;
+
+    span {
+      color: ${props => props.theme.colors.primary};
+      font-weight: 700;
+      font-size: 1.2rem;
+      margin: 0 2px;
+    }
+  }
+
+  .selected-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
 
   @media (max-width: 768px) {
-    width: 100%;
-    flex-direction: column;
-    gap: 10px;
+    .count {
+      font-size: 1rem;
 
-    .selected-items {
-      width: 100%;
-      max-width: none;
+      span {
+        font-size: 1.1rem;
+      }
     }
   }
 `;
@@ -491,14 +616,20 @@ const SelectedItemChip = styled.div`
   padding: 5px 10px;
   border-radius: 15px;
   font-size: 0.9rem;
-  white-space: nowrap;
   display: flex;
   align-items: center;
   gap: 5px;
+  white-space: nowrap;
+
+  @media (max-width: 768px) {
+    font-size: 0.8rem;
+    padding: 4px 8px;
+  }
 
   .remove {
     cursor: pointer;
     color: #666;
+    padding: 0 2px;
     &:hover {
       color: #e74c3c;
     }
@@ -506,19 +637,20 @@ const SelectedItemChip = styled.div`
 `;
 
 const BulkOrderButton = styled.button`
-  background: #e67e22;
+  background: ${props => props.theme.colors.primary};
   color: white;
-  padding: 12px 30px;
   border: none;
-  border-radius: 25px;
-  font-size: 1.1rem;
+  padding: 12px 24px;
+  border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
+  white-space: nowrap;
+  margin-left: 20px;
 
-  &:hover {
-    background: #d35400;
-    transform: translateY(-2px);
+  @media (max-width: 768px) {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    margin-left: 12px;
   }
 `;
 
@@ -592,6 +724,13 @@ const LoadingIndicator = styled.div`
   @media (min-width: 769px) {
     display: none;  // 데스크톱에서는 숨김
   }
+`;
+
+const NoResults = styled.div`
+  text-align: center;
+  padding: 40px;
+  color: #666;
+  font-size: 1.1rem;
 `;
 
 // 상품 데이터를 컴포넌트 외부로 이동
@@ -796,16 +935,39 @@ function Products() {
   // 총 페이지 수 계산
   const totalPages = Math.ceil(products.length / productsPerPage);
 
+  // 필터링된 상품 목록을 반환하는 함수
+  const getFilteredProducts = useCallback(() => {
+    let filtered = [...products];
+    
+    if (selectedCategory !== '전체') {
+      filtered = filtered.filter(product => product.category === selectedCategory);
+    }
+    
+    if (selectedSubCategory) {
+      filtered = filtered.filter(product => product.subCategory === selectedSubCategory);
+    }
+    
+    return filtered;
+  }, [selectedCategory, selectedSubCategory]);
+
   // 초기 데이터 로드 및 페이지네이션/무한스크롤 처리
   useEffect(() => {
+    const filteredProducts = getFilteredProducts();
+    
     if (isMobile) {
-      setCurrentProducts(products.slice(0, productsPerPage));
+      setCurrentProducts(filteredProducts.slice(0, productsPerPage));
+      setHasMore(filteredProducts.length > productsPerPage);
     } else {
       const indexOfLastProduct = currentPage * productsPerPage;
       const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
-      setCurrentProducts(products.slice(indexOfFirstProduct, indexOfLastProduct));
+      setCurrentProducts(filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct));
     }
-  }, [currentPage, isMobile]);
+  }, [currentPage, isMobile, getFilteredProducts]);
+
+  // 카테고리 변경 시 페이지 초기화
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategory, selectedSubCategory]);
 
   // 마지막 아이템 참조 콜백
   const lastProductRef = useCallback(node => {
@@ -820,146 +982,6 @@ function Products() {
     
     if (node) observer.current.observe(node);
   }, [isLoading, hasMore, isMobile]);
-
-  const categories = {
-    전체: [],
-    커피: [
-      '아메리카노',
-      '에스프레소',
-      '콜드브루',
-      '드립커피'
-    ],
-    라떼: [
-      '카페라떼',
-      '바닐라라떼',
-      '카라멜라떼',
-      '헤이즐넛라떼',
-      '티라떼'
-    ],
-    스무디: [
-      '과일스무디',
-      '요거트스무디',
-      '커피스무디',
-      '프라페'
-    ],
-    에이드: [
-      '레몬에이드',
-      '자몽에이드',
-      '청포도에이드',
-      '패션후르츠에이드'
-    ],
-    디저트: [
-      '케이크',
-      '마카롱',
-      '쿠키',
-      '브라우니',
-      '크로플',
-      '스콘'
-    ],
-    브런치: [
-      '샌드위치',
-      '토스트',
-      '베이글',
-      '에그베네딕트',
-      '오믈렛'
-    ],
-    굿즈: [
-      '텀블러',
-      '머그컵',
-      '에코백',
-      '파우치',
-      '스티커'
-    ],
-    샌드위치: [
-      '에그모닝 샌드위치',
-      '크래미모닝 샌드위치',
-      '베이컨햄치즈 샌드위치',
-      '핫붉닭 샌드위치',
-      '치킨데리야끼 샌드위치',
-      '그랜베리치킨 샌드위치',
-      '치킨텐더 샌드위치',
-      '왕새우튀김 샌드위치',
-      '소불고기 샌드위치',
-      '떡갈비 샌드위치',
-      '해쉬베이컨 샌드위치',
-      '몬테크리스토 샌드위치'
-    ]
-  };
-
-  const categoryIcons = {
-    전체: FaShoppingBag,
-    커피: FaCoffee,
-    라떼: FaMugHot,
-    스무디: FaIceCream,
-    에이드: FaCocktail,
-    디저트: FaBirthdayCake,
-    브런치: FaHamburger,
-    굿즈: FaGift,
-    샌드위치: FaHamburger
-  };
-
-  const subCategoryIcons = {
-    // 커피 하위 카테고리
-    '아메리카노': FaCoffee,
-    '에스프레소': FaMugHot,
-    '콜드브루': FaGlassWhiskey,
-    '드립커피': FaDrip,
-    
-    // 라떼 하위 카테고리
-    '카페라떼': FaLatte,
-    '바닐라라떼': FaLatte,
-    '카라멜라떼': FaLatte,
-    '헤이즐넛라떼': FaLatte,
-    '티라떼': FaLeaf,
-    
-    // 스무디 하위 카테고리
-    '과일스무디': FaWineGlass,
-    '요거트스무디': FaWineGlass,
-    '커피스무디': FaGlassWhiskey,
-    '프라페': FaIceCream,
-    
-    // 에이드 하위 카테고리
-    '레몬에이드': FaCocktail,
-    '자몽에이드': FaCocktail,
-    '청포도에이드': FaCocktail,
-    '패션후르츠에이드': FaCocktail,
-    
-    // 디저트 하위 카테고리
-    '케이크': FaBirthdayCake,
-    '마카롱': FaCookie,
-    '쿠키': FaCookie,
-    '브라우니': FaCookie,
-    '크로플': FaBreadSlice,
-    '스콘': FaBreadSlice,
-    
-    // 브런치 하위 카테고리
-    '샌드위치': FaHamburger,
-    '토스트': FaBreadSlice,
-    '베이글': FaBreadSlice,
-    '에그베네딕트': FaHamburger,
-    '오믈렛': FaHamburger,
-    
-    // 굿즈 하위 카테고리
-    '텀블러': FaMugHot,
-    '머그컵': FaMugHot,
-    '에코백': FaTshirt,
-    '파우치': FaShoppingBag,
-    '스티커': FaGift,
-    
-    // 샌드위치 하위 카테고리
-    '에그모닝 샌드위치': FaHamburger,
-    '크래미모닝 샌드위치': FaHamburger,
-    '베이컨햄치즈 샌드위치': FaHamburger,
-    '핫붉닭 샌드위치': FaHamburger,
-    '치킨데리야끼 샌드위치': FaHamburger,
-    '그랜베리치킨 샌드위치': FaHamburger,
-    '치킨텐더 샌드위치': FaHamburger,
-    '왕새우튀김 샌드위치': FaHamburger,
-    '소불고기 샌드위치': FaHamburger,
-    '떡갈비 샌드위치': FaHamburger,
-    '해쉬베이컨 샌드위치': FaHamburger,
-    '몬테크리스토 샌드위치': FaHamburger
-  };
 
   const handleCategoryClick = (category) => {
     if (openCategories.includes(category)) {
@@ -1001,15 +1023,21 @@ function Products() {
   );
 
   const handleBulkOrder = () => {
+    // 선택된 상품들의 데이터를 가져와서 필요한 정보만 전달
+    const orderProducts = selectedProductsData.map(product => ({
+      id: product.id,
+      name: product.name,
+      price: product.originalPrice,
+      image: product.image,
+      quantity: 1
+    }));
+
+    // 상품 데이터 확인을 위한 로그
+    console.log('주문할 상품들:', orderProducts);
+
     navigate('/bulk-order', { 
       state: { 
-        products: selectedProductsData.map(product => ({
-          id: product.id,
-          name: product.name,
-          price: product.discountPrice,
-          image: product.image,
-          quantity: 1  // 기본 수량 1로 설정
-        }))
+        products: orderProducts
       } 
     });
   };
@@ -1105,49 +1133,55 @@ function Products() {
 
         <div>
           <Title>카페 봉봉 상품</Title>
-          <ProductGrid>
-            {currentProducts.map((product, index) => (
-              <ProductCard
-                key={product.id}
-                ref={isMobile && index === currentProducts.length - 1 ? lastProductRef : null}
-                onClick={(e) => handleCardClick(e, product.id)}
-              >
-                <SelectCheckbox
-                  type="checkbox"
-                  checked={selectedProducts.includes(product.id)}
-                  onChange={(e) => {
-                    e.stopPropagation();
-                    handleProductSelect(product.id);
-                  }}
-                />
-                <ProductImageWrapper>
-                  <LikeButton 
-                    isLiked={likedProducts.includes(product.id)}
-                    onClick={(e) => toggleLike(e, product.id)}
-                  >
-                    <FaHeart />
-                  </LikeButton>
-                  <ProductImage src={product.image} alt={product.name} />
-                </ProductImageWrapper>
-                <ProductInfo>
-                  <ProductName as="span">
-                    {product.name}
-                  </ProductName>
-                  <PriceSection>
-                    <Price>{product.originalPrice.toLocaleString()}원</Price>
-                  </PriceSection>
-                  <ProductStats>
-                    <Stat>
-                      <FaHeart style={{ color: '#e74c3c' }} /> {product.likes}
-                    </Stat>
-                    <Stat>
-                      <FaComments /> {product.reviews}
-                    </Stat>
-                  </ProductStats>
-                </ProductInfo>
-              </ProductCard>
-            ))}
-          </ProductGrid>
+          {currentProducts.length > 0 ? (
+            <ProductGrid>
+              {currentProducts.map((product, index) => (
+                <ProductCard
+                  key={product.id}
+                  ref={isMobile && index === currentProducts.length - 1 ? lastProductRef : null}
+                  onClick={(e) => handleCardClick(e, product.id)}
+                >
+                  <SelectCheckbox
+                    type="checkbox"
+                    checked={selectedProducts.includes(product.id)}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      handleProductSelect(product.id);
+                    }}
+                  />
+                  <ProductImageWrapper>
+                    <LikeButton 
+                      isLiked={likedProducts.includes(product.id)}
+                      onClick={(e) => toggleLike(e, product.id)}
+                    >
+                      <FaHeart />
+                    </LikeButton>
+                    <ProductImage src={product.image} alt={product.name} />
+                  </ProductImageWrapper>
+                  <ProductInfo>
+                    <ProductName as="span">
+                      {product.name}
+                    </ProductName>
+                    <PriceSection>
+                      <Price>{product.originalPrice.toLocaleString()}원</Price>
+                    </PriceSection>
+                    <ProductStats>
+                      <Stat>
+                        <FaHeart style={{ color: '#e74c3c' }} /> {product.likes}
+                      </Stat>
+                      <Stat>
+                        <FaComments /> {product.reviews}
+                      </Stat>
+                    </ProductStats>
+                  </ProductInfo>
+                </ProductCard>
+              ))}
+            </ProductGrid>
+          ) : (
+            <NoResults>
+              <p>해당 카테고리에 상품이 없습니다.</p>
+            </NoResults>
+          )}
 
           {isMobile && isLoading && (
             <LoadingIndicator>

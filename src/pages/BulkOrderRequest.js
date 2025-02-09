@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import { ko } from 'date-fns/locale';
+import { useBulkOrders } from '../context/BulkOrderContext';
 
 const Container = styled.div`
   max-width: 800px;
@@ -58,35 +59,39 @@ const OrderSummary = styled.div`
   background: #f8f9fa;
   padding: 20px;
   border-radius: 8px;
-  margin-bottom: 30px;
+  margin: -40px -40px 30px -40px;
+  border-top-left-radius: 15px;
+  border-top-right-radius: 15px;
 `;
 
 const SummaryTitle = styled.h3`
   font-size: 1.2rem;
   color: #2c3e50;
   margin-bottom: 15px;
-  padding-bottom: 10px;
+  padding: 0 20px 10px 20px;
   border-bottom: 1px solid #ddd;
 `;
 
 const ProductList = styled.div`
   display: grid;
-  gap: 20px;
+  gap: 12px;
+  padding: 0 20px;
 `;
 
 const ProductItem = styled.div`
   display: flex;
-  gap: 20px;
-  padding: 15px;
+  gap: 15px;
+  padding: 12px;
   background: white;
   border-radius: 8px;
   align-items: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 
   img {
-    width: 100px;
-    height: 100px;
+    width: 80px;
+    height: 80px;
     object-fit: cover;
-    border-radius: 8px;
+    border-radius: 6px;
   }
 `;
 
@@ -111,19 +116,29 @@ const QuantityControl = styled.div`
   gap: 10px;
 
   input {
-    width: 60px;
+    width: 80px;
     padding: 8px;
     text-align: center;
     border: 1px solid #ddd;
     border-radius: 4px;
+    font-size: 0.9rem;
+
+    &::-webkit-inner-spin-button,
+    &::-webkit-outer-spin-button {
+      opacity: 1;
+      height: 20px;
+    }
   }
 `;
 
 const TotalPrice = styled.div`
   text-align: right;
   padding: 20px;
-  border-top: 2px solid #eee;
+  border-top: 1px solid #eee;
   margin-top: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 
   .total {
     font-size: 1.2rem;
@@ -153,8 +168,7 @@ const SubmitButton = styled.button`
 function BulkOrderRequest() {
   const location = useLocation();
   const navigate = useNavigate();
-  const products = location.state?.products || [];
-
+  const { addBulkOrder } = useBulkOrders();
   const [formData, setFormData] = useState({
     companyName: '',
     contactName: '',
@@ -165,33 +179,62 @@ function BulkOrderRequest() {
     message: ''
   });
 
-  const [quantities, setQuantities] = useState(
-    products.reduce((acc, product) => ({
-      ...acc,
-      [product.id]: 1
-    }), {})
-  );
+  const [quantities, setQuantities] = useState({});
+  const [products, setProducts] = useState([]);
+  const [total, setTotal] = useState(0);
 
   useEffect(() => {
-    if (products.length === 0) {
+    if (!location.state?.products) {
       navigate('/products');
+      return;
     }
-  }, [products, navigate]);
 
-  if (products.length === 0) return null;
+    const initialProducts = location.state.products;
+    const initialQuantities = initialProducts.reduce((acc, product) => ({
+      ...acc,
+      [product.id]: 1
+    }), {});
+
+    setProducts(initialProducts);
+    setQuantities(initialQuantities);
+
+    const initialTotal = initialProducts.reduce((sum, product) => {
+      return sum + (product.price * 1);
+    }, 0);
+    setTotal(initialTotal);
+  }, [location.state, navigate]);
+
+  useEffect(() => {
+    if (products.length > 0 && Object.keys(quantities).length > 0) {
+      const newTotal = products.reduce((sum, product) => {
+        const quantity = quantities[product.id] || 1;
+        return sum + (Number(product.price) * quantity);
+      }, 0);
+      setTotal(newTotal);
+    }
+  }, [products, quantities]);
+
+  if (products.length === 0) {
+    return null;
+  }
 
   const handleQuantityChange = (productId, value) => {
-    const newValue = Math.max(1, parseInt(value) || 1);
-    setQuantities(prev => ({
-      ...prev,
-      [productId]: newValue
-    }));
-  };
+    if (value === '' || value === '0') {
+      setQuantities(prev => ({
+        ...prev,
+        [productId]: value
+      }));
+      return;
+    }
 
-  const calculateTotal = () => {
-    return products.reduce((total, product) => (
-      total + (product.price * quantities[product.id])
-    ), 0);
+    const numValue = parseInt(value);
+    if (!isNaN(numValue)) {
+      const validValue = Math.min(999, numValue);
+      setQuantities(prev => ({
+        ...prev,
+        [productId]: validValue
+      }));
+    }
   };
 
   const handleSubmit = (e) => {
@@ -204,10 +247,10 @@ function BulkOrderRequest() {
         quantity: quantities[product.id],
         price: product.price
       })),
-      totalAmount: calculateTotal()
+      totalAmount: total
     };
-    console.log('주문 데이터:', orderData);
-    // TODO: API 호출 로직 추가
+    
+    addBulkOrder(orderData);
     alert('단체 주문이 접수되었습니다.');
     navigate('/products');
   };
@@ -224,22 +267,30 @@ function BulkOrderRequest() {
                 <img src={product.image} alt={product.name} />
                 <ProductInfo>
                   <h4>{product.name}</h4>
-                  <div className="price">{product.price.toLocaleString()}원</div>
+                  <div className="price">{product.price?.toLocaleString()}원</div>
                 </ProductInfo>
                 <QuantityControl>
                   <input
                     type="number"
                     min="1"
-                    value={quantities[product.id]}
+                    max="999"
+                    value={quantities[product.id] || ''}
                     onChange={(e) => handleQuantityChange(product.id, e.target.value)}
+                    onBlur={(e) => {
+                      if (e.target.value === '' || e.target.value === '0') {
+                        handleQuantityChange(product.id, '1');
+                      }
+                    }}
                   />
-                  개
+                  <span>개</span>
                 </QuantityControl>
               </ProductItem>
             ))}
           </ProductList>
           <TotalPrice>
-            <div className="total">총 주문금액: {calculateTotal().toLocaleString()}원</div>
+            <div className="total">
+              총 주문금액: {Number.isNaN(total) ? '0' : total.toLocaleString()}원
+            </div>
           </TotalPrice>
         </OrderSummary>
 

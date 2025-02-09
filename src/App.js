@@ -16,6 +16,7 @@ import GlobalStyle from './styles/GlobalStyle';
 import MobileNavBar from './components/MobileNavBar';
 import { useMediaQuery } from 'react-responsive';
 import { categories, categoryIcons, subCategoryIcons } from './data/categories';
+import { BulkOrderProvider } from './context/BulkOrderContext';
 
 const PageContainer = styled.div`
   padding-top: ${props => props.noTopPadding ? '0' : '60px'};
@@ -52,7 +53,7 @@ function AppContent() {
   };
 
   return (
-    <>
+    <BulkOrderProvider>
       <GlobalStyle />
       <Navbar />
       <PageContainer noTopPadding={window.location.pathname === '/locations'}>
@@ -83,7 +84,7 @@ function AppContent() {
         subCategoryIcons={subCategoryIcons}
         onCategorySelect={handleCategorySelect}
       />
-    </>
+    </BulkOrderProvider>
   );
 }
 
