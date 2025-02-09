@@ -25,113 +25,8 @@ import {
 } from 'react-icons/fa';
 import { useMediaQuery } from 'react-responsive';
 import MobileNavBar from '../components/MobileNavBar';
-
-// 카테고리 정의
-const categories = {
-  전체: [],
-  커피: [
-    '아메리카노',
-    '에스프레소',
-    '콜드브루',
-    '드립커피'
-  ],
-  라떼: [
-    '카페라떼',
-    '바닐라라떼',
-    '카라멜라떼',
-    '헤이즐넛라떼',
-    '티라떼'
-  ],
-  스무디: [
-    '과일스무디',
-    '요거트스무디',
-    '커피스무디',
-    '프라페'
-  ],
-  에이드: [
-    '레몬에이드',
-    '자몽에이드',
-    '청포도에이드',
-    '패션후르츠에이드'
-  ],
-  디저트: [
-    '케이크',
-    '마카롱',
-    '쿠키',
-    '브라우니',
-    '크로플',
-    '스콘'
-  ],
-  브런치: [
-    '에그베네딕트',
-    '토스트',
-    '베이글',
-    '오믈렛',
-    '에그모닝 샌드위치',
-    '베이컨햄치즈 샌드위치',
-    '치킨데리야끼 샌드위치',
-    '그릴드치즈 샌드위치',
-    '클럽 샌드위치',
-    'BLT 샌드위치',
-    '아보카도 샌드위치',
-    '연어 샌드위치'
-  ]
-};
-
-// 카테고리 아이콘 매핑
-const categoryIcons = {
-  전체: FaShoppingBag,
-  커피: FaCoffee,
-  라떼: FaMugHot,
-  스무디: FaIceCream,
-  에이드: FaCocktail,
-  디저트: FaBirthdayCake,
-  브런치: FaHamburger
-};
-
-// 서브카테고리 아이콘 매핑
-const subCategoryIcons = {
-  '아메리카노': FaCoffee,
-  '에스프레소': FaMugHot,
-  '콜드브루': FaGlassWhiskey,
-  '드립커피': FaDrip,
-  '카페라떼': FaLatte,
-  '바닐라라떼': FaLatte,
-  '카라멜라떼': FaLatte,
-  '헤이즐넛라떼': FaLatte,
-  '티라떼': FaLeaf,
-  '과일스무디': FaWineGlass,
-  '요거트스무디': FaWineGlass,
-  '커피스무디': FaGlassWhiskey,
-  '프라페': FaGlassWhiskey,
-  '레몬에이드': FaCocktail,
-  '자몽에이드': FaCocktail,
-  '청포도에이드': FaCocktail,
-  '패션후르츠에이드': FaCocktail,
-  '케이크': FaBirthdayCake,
-  '마카롱': FaCookie,
-  '쿠키': FaCookie,
-  '브라우니': FaCookie,
-  '크로플': FaBreadSlice,
-  '스콘': FaBreadSlice,
-  '에그베네딕트': FaBreadSlice,
-  '토스트': FaBreadSlice,
-  '베이글': FaBreadSlice,
-  '오믈렛': FaBreadSlice,
-  '텀블러': FaMugHot,
-  '머그컵': FaMugHot,
-  '에코백': FaTshirt,
-  '파우치': FaShoppingBag,
-  '스티커': FaGift,
-  '에그모닝 샌드위치': FaHamburger,
-  '베이컨햄치즈 샌드위치': FaHamburger,
-  '치킨데리야끼 샌드위치': FaHamburger,
-  '그릴드치즈 샌드위치': FaHamburger,
-  '클럽 샌드위치': FaHamburger,
-  'BLT 샌드위치': FaHamburger,
-  '아보카도 샌드위치': FaHamburger,
-  '연어 샌드위치': FaHamburger
-};
+import { categories, categoryIcons, subCategoryIcons } from '../data/categories';
+import { products } from '../data/products';
 
 const ProductsContainer = styled.div`
   display: grid;
@@ -169,7 +64,7 @@ const Sidebar = styled.div`
   }
 `;
 
-const CategoryList = styled.ul`
+const CategoryList = styled.div`
   list-style: none;
   padding: 0;
   margin: 0;
@@ -182,81 +77,50 @@ const CategoryList = styled.ul`
   }
 `;
 
-const CategoryItem = styled.li`
+const CategoryItem = styled.div`
   padding: 12px 15px;
   cursor: pointer;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-  color: ${props => props.active ? '#e67e22' : '#2c3e50'};
-  background: ${props => props.active ? '#fff3e0' : 'transparent'};
-  font-weight: ${props => props.active ? '600' : 'normal'};
   display: flex;
   align-items: center;
   justify-content: space-between;
+  color: ${props => props.active ? props.theme.colors.primary : '#2c3e50'};
+  background: ${props => props.active ? '#fff3e0' : 'transparent'};
+  transition: all 0.2s ease;
 
-  @media (max-width: 768px) {
-    padding: 8px 12px;
-    font-size: 0.9rem;  // 폰트 크기 조정
+  &:hover {
+    background: #fff3e0;
+    color: ${props => props.theme.colors.primary};
   }
 
-  .category-content {
+  .category-name {
     display: flex;
     align-items: center;
     gap: 10px;
   }
-
-  .icon {
-    font-size: 1.2rem;
-  }
-
-  &:hover {
-    background: #fff3e0;
-    color: #e67e22;
-  }
 `;
 
-const SubCategoryList = styled.ul`
-  list-style: none;
-  padding: 0;
-  margin: 10px 0;
-  display: ${props => props.isOpen ? 'flex' : 'none'};
-  flex-wrap: wrap;
-  gap: 8px;
-  background: #f8f8f8;
-  padding: 12px;
-  border-radius: 8px;
-
-  @media (max-width: 768px) {
-    padding: 8px;
-    gap: 6px;
-  }
+const SubCategoryList = styled.div`
+  display: ${props => props.isVisible ? 'block' : 'none'};  // 조건부 표시
+  padding-left: 20px;
+  background: #f8f9fa;
 `;
 
-const SubCategoryItem = styled.button`
-  padding: 6px 12px;
-  background: ${props => props.active ? props.theme.colors.primary : 'white'};
-  color: ${props => props.active ? 'white' : props.theme.colors.text.primary};
-  border: 1px solid ${props => props.active ? props.theme.colors.primary : '#ddd'};
-  border-radius: 20px;
-  font-size: 0.9rem;
+const SubCategoryItem = styled.div`
+  padding: 10px 15px;
   cursor: pointer;
+  color: ${props => props.active ? props.theme.colors.primary : '#666'};
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
 
   &:hover {
-    border-color: ${props => props.theme.colors.primary};
-    color: ${props => !props.active && props.theme.colors.primary};
+    color: ${props => props.theme.colors.primary};
+    background: #fff3e0;
   }
 
   svg {
-    font-size: 1rem;
-  }
-
-  @media (max-width: 768px) {
-    font-size: 0.8rem;
-    padding: 4px 10px;
+    font-size: 1.1rem;
   }
 `;
 
@@ -733,194 +597,10 @@ const NoResults = styled.div`
   font-size: 1.1rem;
 `;
 
-// 상품 데이터를 컴포넌트 외부로 이동
-const products = [
-  {
-    id: 1,
-    name: '봉봉 시그니처 라떼',
-    originalPrice: 7000,
-    image: 'https://images.unsplash.com/photo-1541167760496-1628856ab772?ixlib=rb-4.0.3',
-    reviews: 128,
-    likes: 342,
-    category: '라떼'
-  },
-  {
-    id: 2,
-    name: '아메리카노',
-    originalPrice: 4500,
-    image: 'https://images.unsplash.com/photo-1520031441872-265e4ff70366?ixlib=rb-4.0.3',
-    reviews: 256,
-    likes: 421,
-    category: '커피'
-  },
-  {
-    id: 3,
-    name: '카페모카',
-    originalPrice: 6000,
-    image: 'https://images.unsplash.com/photo-1572490122747-3968b75cc699?ixlib=rb-4.0.3',
-    reviews: 89,
-    likes: 156,
-    category: '커피'
-  },
-  {
-    id: 4,
-    name: '딸기 스무디',
-    originalPrice: 6500,
-    image: 'https://images.unsplash.com/photo-1553530666-ba11a7da3888?ixlib=rb-4.0.3',
-    reviews: 67,
-    likes: 98,
-    category: '스무디'
-  },
-  {
-    id: 5,
-    name: '망고 스무디',
-    originalPrice: 6500,
-    image: 'https://images.unsplash.com/photo-1623065422902-30a2d299bbe4?ixlib=rb-4.0.3',
-    reviews: 45,
-    likes: 87,
-    category: '스무디'
-  },
-  {
-    id: 6,
-    name: '레몬 에이드',
-    originalPrice: 5500,
-    image: 'https://images.unsplash.com/photo-1621263764928-df1444c5e859?ixlib=rb-4.0.3',
-    reviews: 78,
-    likes: 134,
-    category: '에이드'
-  },
-  {
-    id: 7,
-    name: '청포도 에이드',
-    originalPrice: 5500,
-    image: 'https://images.unsplash.com/photo-1567861911437-538298e4232c?ixlib=rb-4.0.3',
-    reviews: 92,
-    likes: 167,
-    category: '에이드'
-  },
-  {
-    id: 8,
-    name: '티라미수',
-    originalPrice: 7000,
-    image: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?ixlib=rb-4.0.3',
-    reviews: 156,
-    likes: 289,
-    category: '디저트'
-  },
-  {
-    id: 9,
-    name: '초코 브라우니',
-    originalPrice: 5500,
-    image: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?ixlib=rb-4.0.3',
-    reviews: 112,
-    likes: 245,
-    category: '디저트'
-  },
-  {
-    id: 10,
-    name: '아보카도 토스트',
-    originalPrice: 8500,
-    image: 'https://images.unsplash.com/photo-1541519227354-08fa5d50c44d?ixlib=rb-4.0.3',
-    reviews: 67,
-    likes: 143,
-    category: '브런치'
-  },
-  {
-    id: 11,
-    name: '에그 베네딕트',
-    originalPrice: 12000,
-    image: 'https://images.unsplash.com/photo-1608039829572-78524f79c4c7?ixlib=rb-4.0.3',
-    reviews: 89,
-    likes: 178,
-    category: '브런치'
-  },
-  {
-    id: 12,
-    name: '봉봉 텀블러',
-    originalPrice: 28000,
-    image: 'https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?ixlib=rb-4.0.3',
-    reviews: 45,
-    likes: 98,
-    category: '굿즈'
-  },
-  {
-    id: 13,
-    name: '바닐라 라떼',
-    originalPrice: 6000,
-    image: 'https://images.unsplash.com/photo-1572442388796-11668a67e53d?ixlib=rb-4.0.3',
-    reviews: 156,
-    likes: 267,
-    category: '라떼'
-  },
-  {
-    id: 14,
-    name: '카라멜 마끼아또',
-    originalPrice: 6000,
-    image: 'https://images.unsplash.com/photo-1589396575653-c09c794ff6a6?ixlib=rb-4.0.3',
-    reviews: 134,
-    likes: 245,
-    category: '라떼'
-  },
-  {
-    id: 15,
-    name: '콜드브루',
-    originalPrice: 5500,
-    image: 'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?ixlib=rb-4.0.3',
-    reviews: 198,
-    likes: 312,
-    category: '커피'
-  },
-  {
-    id: 16,
-    name: '봉봉 에코백',
-    originalPrice: 18000,
-    image: 'https://images.unsplash.com/photo-1597484662317-9bd7bdda2907?ixlib=rb-4.0.3',
-    reviews: 34,
-    likes: 76,
-    category: '굿즈'
-  },
-  {
-    id: 17,
-    name: '블루베리 치즈케이크',
-    originalPrice: 6500,
-    image: 'https://images.unsplash.com/photo-1533134242443-d4fd215305ad?ixlib=rb-4.0.3',
-    reviews: 178,
-    likes: 289,
-    category: '디저트'
-  },
-  {
-    id: 18,
-    name: '크로플',
-    originalPrice: 5000,
-    image: 'https://images.unsplash.com/photo-1586985289688-ca3cf47d3e6e?ixlib=rb-4.0.3',
-    reviews: 145,
-    likes: 234,
-    category: '디저트'
-  },
-  {
-    id: 19,
-    name: '봉봉 머그컵',
-    originalPrice: 15000,
-    image: 'https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?ixlib=rb-4.0.3',
-    reviews: 67,
-    likes: 123,
-    category: '굿즈'
-  },
-  {
-    id: 20,
-    name: '허니 브레드',
-    originalPrice: 9000,
-    image: 'https://images.unsplash.com/photo-1484723091739-30a097e8f929?ixlib=rb-4.0.3',
-    reviews: 89,
-    likes: 156,
-    category: '디저트'
-  }
-];
-
 function Products() {
-  const [selectedCategory, setSelectedCategory] = useState('전체');
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [expandedCategory, setExpandedCategory] = useState(null);
   const [selectedSubCategory, setSelectedSubCategory] = useState(null);
-  const [openCategories, setOpenCategories] = useState(['전체']);
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [likedProducts, setLikedProducts] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -984,13 +664,12 @@ function Products() {
   }, [isLoading, hasMore, isMobile]);
 
   const handleCategoryClick = (category) => {
-    if (openCategories.includes(category)) {
-      setOpenCategories(openCategories.filter(cat => cat !== category));
+    if (expandedCategory === category) {
+      setExpandedCategory(null);
     } else {
-      setOpenCategories([...openCategories, category]);
+      setExpandedCategory(category);
     }
     setSelectedCategory(category);
-    setSelectedSubCategory(null);
   };
 
   const handleSubCategoryClick = (subCategory) => {
@@ -1095,35 +774,58 @@ function Products() {
       <ProductsContainer>
         <Sidebar>
           <CategoryList>
-            {Object.entries(categories).map(([category]) => (
-              <CategoryItem
-                key={category}
-                active={category === selectedCategory}
-                onClick={() => handleCategoryClick(category)}
-              >
-                <div className="category-content">
-                  {React.createElement(categoryIcons[category], { className: 'icon' })}
-                  {category}
-                </div>
-              </CategoryItem>
+            {categories.map(category => (
+              <div key={category.name}>
+                <CategoryItem
+                  active={selectedCategory === category.name}
+                  onClick={() => handleCategoryClick(category.name)}
+                >
+                  <div className="category-name">
+                    {categoryIcons[category.name]}
+                    {category.name}
+                  </div>
+                  {category.subCategories && category.subCategories.length > 0 && (
+                    <FaChevronDown
+                      style={{
+                        transform: expandedCategory === category.name ? 'rotate(180deg)' : 'rotate(0)',
+                        transition: 'transform 0.3s ease'
+                      }}
+                    />
+                  )}
+                </CategoryItem>
+                {category.subCategories && category.subCategories.length > 0 && (
+                  <SubCategoryList isVisible={expandedCategory === category.name}>
+                    {category.subCategories.map(subCategory => (
+                      <SubCategoryItem
+                        key={subCategory}
+                        active={selectedCategory === subCategory}
+                        onClick={() => setSelectedCategory(subCategory)}
+                      >
+                        {subCategoryIcons[subCategory]}
+                        {subCategory}
+                      </SubCategoryItem>
+                    ))}
+                  </SubCategoryList>
+                )}
+              </div>
             ))}
           </CategoryList>
         </Sidebar>
 
-        {/* 모바일용 하위 카테고리 컨테이너 추가 */}
-        {selectedCategory !== '전체' && categories[selectedCategory]?.length > 0 && (
+        {/* 모바일용 하위 카테고리는 isMobile일 때만 표시 */}
+        {isMobile && selectedCategory !== '전체' && selectedCategory && categories.find(cat => cat.name === selectedCategory)?.subCategories?.length > 0 && (
           <MobileSubCategoryContainer>
             <MobileSubCategoryTitle>
               {selectedCategory} 카테고리
             </MobileSubCategoryTitle>
             <MobileSubCategoryList>
-              {categories[selectedCategory].map(subCategory => (
+              {categories.find(cat => cat.name === selectedCategory)?.subCategories.map(subCategory => (
                 <MobileSubCategoryItem
                   key={subCategory}
                   active={subCategory === selectedSubCategory}
                   onClick={() => handleSubCategoryClick(subCategory)}
                 >
-                  {React.createElement(subCategoryIcons[subCategory], { className: 'icon' })}
+                  {subCategoryIcons[subCategory]}
                   {subCategory}
                 </MobileSubCategoryItem>
               ))}

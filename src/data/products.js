@@ -180,5 +180,14 @@ export const products = [
     likes: 167,
     category: '샌드위치',
     subCategory: '연어 샌드위치'
+  },
+  {
+    id: 78,
+    name: '봉봉 시그니처 라떼',
+    originalPrice: 7000,
+    image: 'https://images.unsplash.com/photo-1541167760496-1628856ab772?ixlib=rb-4.0.3',
+    reviews: 128,
+    likes: 342,
+    category: '라떼'
   }
 ]; 

@@ -4,6 +4,7 @@ import { useBulkOrders } from '../../context/BulkOrderContext';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import html2canvas from 'html2canvas';
+import AdminLayout from '../../components/admin/AdminLayout';
 
 const Container = styled.div`
   max-width: 1200px;
@@ -247,13 +248,15 @@ const OrderDetailsButton = styled.button`
 `;
 
 const OrderDetailsModal = styled(ReceiptModal)`
-  max-width: 600px;
+  max-width: 900px;
+  width: 90%;
 `;
 
 const OrderDetailsContent = styled.div`
   background: white;
   padding: 20px;
   border-radius: 8px;
+  width: 100%;
 
   h3 {
     color: #2c3e50;
@@ -324,6 +327,29 @@ const OrderDetailsContent = styled.div`
     .message {
       white-space: pre-wrap;
     }
+  }
+`;
+
+const Modal = styled.div`
+  background: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 900px;
+  padding: 30px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  max-height: 90vh;
+  overflow-y: auto;
+`;
+
+const OrderDetailsTable = styled.table`
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+
+  th, td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
   }
 `;
 
@@ -404,181 +430,183 @@ function BulkOrderManagement() {
   };
 
   return (
-    <Container>
-      <Title>단체 주문 견적 관리</Title>
-      <OrderTable>
-        <thead>
-          <tr>
-            <th>주문일시</th>
-            <th>회사/단체명</th>
-            <th>담당자</th>
-            <th>주문 상품</th>
-            <th>총 금액</th>
-            <th>상태</th>
-            <th>관리</th>
-          </tr>
-        </thead>
-        <tbody>
-          {bulkOrders.map(order => (
-            <tr key={order.id}>
-              <td>{formatDate(order.createdAt)}</td>
-              <td>{order.companyName}</td>
-              <td>{order.contactName}</td>
-              <td>
-                <OrderDetailsButton onClick={() => setShowOrderDetails(order)}>
-                  상품 목록 ({order.products.length}개)
-                </OrderDetailsButton>
-              </td>
-              <td>{order.totalAmount.toLocaleString()}원</td>
-              <td><StatusBadge status={order.status}>{order.status}</StatusBadge></td>
-              <td>
-                {order.status === '대기중' && (
-                  <>
-                    <ActionButton
-                      approve
-                      onClick={() => handleStatusUpdate(order.id, '승인')}
-                    >
-                      승인
-                    </ActionButton>
-                    <ActionButton
-                      onClick={() => handleStatusUpdate(order.id, '거절')}
-                    >
-                      거절
-                    </ActionButton>
-                  </>
-                )}
-                {order.status === '승인' && (
-                  <>
-                    <ActionButton
-                      approve
-                      onClick={() => handleStatusUpdate(order.id, '픽업 완료')}
-                    >
-                      픽업 완료
-                    </ActionButton>
+    <AdminLayout>
+      <Container>
+        <Title>단체 주문 견적 관리</Title>
+        <OrderTable>
+          <thead>
+            <tr>
+              <th>주문일시</th>
+              <th>회사/단체명</th>
+              <th>담당자</th>
+              <th>주문 상품</th>
+              <th>총 금액</th>
+              <th>상태</th>
+              <th>관리</th>
+            </tr>
+          </thead>
+          <tbody>
+            {bulkOrders.map(order => (
+              <tr key={order.id}>
+                <td>{formatDate(order.createdAt)}</td>
+                <td>{order.companyName}</td>
+                <td>{order.contactName}</td>
+                <td>
+                  <OrderDetailsButton onClick={() => setShowOrderDetails(order)}>
+                    상품 목록 ({order.products.length}개)
+                  </OrderDetailsButton>
+                </td>
+                <td>{order.totalAmount.toLocaleString()}원</td>
+                <td><StatusBadge status={order.status}>{order.status}</StatusBadge></td>
+                <td>
+                  {order.status === '대기중' && (
+                    <>
+                      <ActionButton
+                        approve
+                        onClick={() => handleStatusUpdate(order.id, '승인')}
+                      >
+                        승인
+                      </ActionButton>
+                      <ActionButton
+                        onClick={() => handleStatusUpdate(order.id, '거절')}
+                      >
+                        거절
+                      </ActionButton>
+                    </>
+                  )}
+                  {order.status === '승인' && (
+                    <>
+                      <ActionButton
+                        approve
+                        onClick={() => handleStatusUpdate(order.id, '픽업 완료')}
+                      >
+                        픽업 완료
+                      </ActionButton>
+                      <DownloadButton onClick={() => setSelectedOrder(order)}>
+                        영수증 보기
+                      </DownloadButton>
+                    </>
+                  )}
+                  {order.status === '픽업 완료' && (
                     <DownloadButton onClick={() => setSelectedOrder(order)}>
                       영수증 보기
                     </DownloadButton>
-                  </>
-                )}
-                {order.status === '픽업 완료' && (
-                  <DownloadButton onClick={() => setSelectedOrder(order)}>
-                    영수증 보기
-                  </DownloadButton>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </OrderTable>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </OrderTable>
 
-      {/* 주문 상세 모달 */}
-      {showOrderDetails && (
-        <>
-          <Overlay onClick={() => setShowOrderDetails(null)} />
-          <OrderDetailsModal>
-            <OrderDetailsContent>
-              <h3>단체 주문 상세 내역</h3>
-              <div className="products-list">
-                {showOrderDetails.products.map((product, index) => (
-                  <div key={index} className="product-item">
-                    <div className="product-info">
-                      <img src={product.image} alt={product.name} />
-                      <div className="name">{product.name}</div>
+        {/* 주문 상세 모달 */}
+        {showOrderDetails && (
+          <>
+            <Overlay onClick={() => setShowOrderDetails(null)} />
+            <OrderDetailsModal>
+              <OrderDetailsContent>
+                <h3>단체 주문 상세 내역</h3>
+                <div className="products-list">
+                  {showOrderDetails.products.map((product, index) => (
+                    <div key={index} className="product-item">
+                      <div className="product-info">
+                        <img src={product.image} alt={product.name} />
+                        <div className="name">{product.name}</div>
+                      </div>
+                      <div className="quantity">
+                        {product.quantity}개
+                        <span className="price">
+                          ({product.price.toLocaleString()}원)
+                        </span>
+                      </div>
                     </div>
-                    <div className="quantity">
-                      {product.quantity}개
-                      <span className="price">
-                        ({product.price.toLocaleString()}원)
-                      </span>
+                  ))}
+                </div>
+                <div className="delivery-info">
+                  <h4>배송 희망일</h4>
+                  <p>
+                    {new Date(showOrderDetails.deliveryDate).toLocaleDateString('ko-KR', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      weekday: 'long'
+                    })}
+                  </p>
+
+                  <h4>배송지 주소</h4>
+                  <p>{showOrderDetails.deliveryAddress}</p>
+
+                  {showOrderDetails.message && (
+                    <>
+                      <h4>추가 요청사항</h4>
+                      <p className="message">{showOrderDetails.message}</p>
+                    </>
+                  )}
+                </div>
+              </OrderDetailsContent>
+              <ButtonGroup>
+                <CloseButton onClick={() => setShowOrderDetails(null)}>
+                  닫기
+                </CloseButton>
+              </ButtonGroup>
+            </OrderDetailsModal>
+          </>
+        )}
+
+        {/* 영수증 모달 */}
+        {selectedOrder && (
+          <>
+            <Overlay onClick={() => setSelectedOrder(null)} />
+            <ReceiptModal>
+              <Receipt className="receipt-content">
+                <div className="header">
+                  <h2>봉봉 카페</h2>
+                  <p>단체 주문 영수증</p>
+                  <p>{formatDate(selectedOrder.createdAt)}</p>
+                </div>
+                <div className="customer-info">
+                  <p>
+                    <span>회사/단체명</span>
+                    <span>{selectedOrder.companyName}</span>
+                  </p>
+                  <p>
+                    <span>담당자</span>
+                    <span>{selectedOrder.contactName}</span>
+                  </p>
+                  <p>
+                    <span>연락처</span>
+                    <span>{selectedOrder.phone}</span>
+                  </p>
+                </div>
+                <div className="items">
+                  {selectedOrder.products.map((product, index) => (
+                    <div key={index} className="item">
+                      <span className="item-name">{product.name}</span>
+                      <div className="item-details">
+                        <span>{product.price.toLocaleString()}원 x {product.quantity}개</span>
+                        <span className="item-total">
+                          {(product.price * product.quantity).toLocaleString()}원
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-              <div className="delivery-info">
-                <h4>배송 희망일</h4>
-                <p>
-                  {new Date(showOrderDetails.deliveryDate).toLocaleDateString('ko-KR', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    weekday: 'long'
-                  })}
-                </p>
-
-                <h4>배송지 주소</h4>
-                <p>{showOrderDetails.deliveryAddress}</p>
-
-                {showOrderDetails.message && (
-                  <>
-                    <h4>추가 요청사항</h4>
-                    <p className="message">{showOrderDetails.message}</p>
-                  </>
-                )}
-              </div>
-            </OrderDetailsContent>
-            <ButtonGroup>
-              <CloseButton onClick={() => setShowOrderDetails(null)}>
-                닫기
-              </CloseButton>
-            </ButtonGroup>
-          </OrderDetailsModal>
-        </>
-      )}
-
-      {/* 영수증 모달 */}
-      {selectedOrder && (
-        <>
-          <Overlay onClick={() => setSelectedOrder(null)} />
-          <ReceiptModal>
-            <Receipt className="receipt-content">
-              <div className="header">
-                <h2>봉봉 카페</h2>
-                <p>단체 주문 영수증</p>
-                <p>{formatDate(selectedOrder.createdAt)}</p>
-              </div>
-              <div className="customer-info">
-                <p>
-                  <span>회사/단체명</span>
-                  <span>{selectedOrder.companyName}</span>
-                </p>
-                <p>
-                  <span>담당자</span>
-                  <span>{selectedOrder.contactName}</span>
-                </p>
-                <p>
-                  <span>연락처</span>
-                  <span>{selectedOrder.phone}</span>
-                </p>
-              </div>
-              <div className="items">
-                {selectedOrder.products.map((product, index) => (
-                  <div key={index} className="item">
-                    <span className="item-name">{product.name}</span>
-                    <div className="item-details">
-                      <span>{product.price.toLocaleString()}원 x {product.quantity}개</span>
-                      <span className="item-total">
-                        {(product.price * product.quantity).toLocaleString()}원
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="total">
-                총 금액: {selectedOrder.totalAmount.toLocaleString()}원
-              </div>
-            </Receipt>
-            <ButtonGroup>
-              <DownloadButton onClick={() => generateReceiptPDF(selectedOrder)}>
-                영수증 다운로드
-              </DownloadButton>
-              <CloseButton onClick={() => setSelectedOrder(null)}>
-                닫기
-              </CloseButton>
-            </ButtonGroup>
-          </ReceiptModal>
-        </>
-      )}
-    </Container>
+                  ))}
+                </div>
+                <div className="total">
+                  총 금액: {selectedOrder.totalAmount.toLocaleString()}원
+                </div>
+              </Receipt>
+              <ButtonGroup>
+                <DownloadButton onClick={() => generateReceiptPDF(selectedOrder)}>
+                  영수증 다운로드
+                </DownloadButton>
+                <CloseButton onClick={() => setSelectedOrder(null)}>
+                  닫기
+                </CloseButton>
+              </ButtonGroup>
+            </ReceiptModal>
+          </>
+        )}
+      </Container>
+    </AdminLayout>
   );
 }
 

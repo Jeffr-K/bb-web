@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import { useCart } from '../context/CafeContext';
-import { FaUsers, FaChevronLeft, FaChevronRight, FaInfoCircle, FaMapMarkerAlt, FaExclamationTriangle, FaQuestionCircle, FaShoppingCart, FaStar, FaReply } from 'react-icons/fa';
+import { FaUsers, FaChevronLeft, FaChevronRight, FaInfoCircle, FaMapMarkerAlt, FaExclamationTriangle, FaQuestionCircle, FaShoppingCart, FaStar, FaReply, FaCamera, FaStar as FaStarEmpty, FaStarHalf } from 'react-icons/fa';
 import InquiryModal from '../components/InquiryModal';
 
 // fadeIn 애니메이션 정의
@@ -95,7 +95,9 @@ const SliderButton = styled.button`
 `;
 
 const ProductInfo = styled.div`
+  flex: 1;
   padding: 20px;
+  text-align: center;
 
   h2 {
     font-size: 2.5rem;
@@ -115,6 +117,11 @@ const ProductInfo = styled.div`
     line-height: 1.8;
     color: #34495e;
     margin-bottom: 40px;
+  }
+
+  .category {
+    color: #666;
+    margin-bottom: 10px;
   }
 `;
 
@@ -187,19 +194,19 @@ const DetailSection = styled.div`
 
 const TabMenu = styled.div`
   display: flex;
+  justify-content: center;
   gap: 40px;
   border-bottom: 1px solid #ddd;
   margin-bottom: 40px;
+  padding: 0 20px;
 
   @media (max-width: 768px) {
+    justify-content: stretch;
     display: grid;
-    grid-template-columns: repeat(2, 1fr);  // 2열 그리드
+    grid-template-columns: repeat(2, 1fr);
     gap: 1px;
-    background: #eee;  // 그리드 라인 색상
-    border: 1px solid #eee;
-    border-radius: 8px;
-    overflow: hidden;
-    margin: 0 10px 30px 10px;
+    margin: 0 0 30px 0;
+    padding: 0;
   }
 `;
 
@@ -213,26 +220,22 @@ const Tab = styled.button`
   border-bottom: 2px solid ${props => props.active ? props.theme.colors.primary : 'transparent'};
   cursor: pointer;
   transition: all 0.3s ease;
+  white-space: nowrap;
 
   @media (max-width: 768px) {
     font-size: 0.9rem;
     padding: 15px 10px;
-    background: white;
+    background: none;
     border: none;
-    border-radius: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
-    color: ${props => props.active ? props.theme.colors.primary : '#666'};
-    font-weight: ${props => props.active ? '600' : 'normal'};
+    white-space: normal;
+    border-bottom: ${props => props.active ? `2px solid ${props.theme.colors.primary}` : 'none'};
 
     svg {
       font-size: 1rem;
-    }
-
-    &:active {
-      background: #f8f8f8;
     }
   }
 `;
@@ -347,24 +350,194 @@ const InquiryList = styled.div`
   }
 `;
 
-const ReviewContainer = styled.div`
-  max-width: 800px;
-  margin: 0 auto;
+const WriteReviewCard = styled.div`
+  background: white;
+  border: 1px solid #eee;
+  border-radius: 15px;
+  padding: 20px;
+  margin-bottom: 30px;
+`;
 
-  @media (max-width: 768px) {
-    .review-header {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 10px;
-    }
+const ReviewInput = styled.div`
+  display: flex;
+  gap: 15px;
+  margin-bottom: ${props => props.isExpanded ? '20px' : '0'};
 
-    .review-content {
-      font-size: 0.9rem;
-    }
+  .avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #757575;
+    font-size: 1.2rem;
+    font-weight: 600;
+  }
 
-    .review-meta {
-      font-size: 0.8rem;
+  .input-area {
+    flex: 1;
+    position: relative;
+  }
+`;
+
+const ReviewTextArea = styled.textarea`
+  width: 100%;
+  min-height: ${props => props.isExpanded ? '120px' : '48px'};
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  resize: none;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+
+  &:focus {
+    outline: none;
+    border-color: ${props => props.theme.colors.primary};
+    box-shadow: 0 0 0 2px rgba(230, 126, 34, 0.1);
+  }
+
+  &::placeholder {
+    color: #95a5a6;
+  }
+`;
+
+const ReviewActions = styled.div`
+  display: flex;
+  gap: 15px;
+  margin-top: 15px;
+  color: #95a5a6;
+  font-size: 0.9rem;
+`;
+
+const ActionButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  color: #95a5a6;
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    color: ${props => props.theme.colors.primary};
+    background: rgba(230, 126, 34, 0.1);
+  }
+
+  svg {
+    font-size: 1.1rem;
+  }
+`;
+
+const ReplySection = styled.div`
+  margin-left: 25px;
+  padding-left: 15px;
+  border-left: 2px solid #eee;
+  margin-top: 15px;
+`;
+
+const ReplyForm = styled.form`
+  margin-top: 15px;
+  animation: ${fadeIn} 0.3s ease-out;
+
+  textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    resize: none;
+    min-height: 80px;
+    margin-bottom: 10px;
+    font-size: 0.95rem;
+
+    &:focus {
+      outline: none;
+      border-color: ${props => props.theme.colors.primary};
+      box-shadow: 0 0 0 2px rgba(230, 126, 34, 0.1);
     }
+  }
+
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
+  button {
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    
+    &.cancel {
+      background: none;
+      border: 1px solid #ddd;
+      color: #666;
+      
+      &:hover {
+        background: #f8f9fa;
+      }
+    }
+    
+    &.submit {
+      background: ${props => props.theme.colors.primary};
+      color: white;
+      border: none;
+      
+      &:hover {
+        background: #d35400;
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+  }
+`;
+
+const Reply = styled.div`
+  padding: 15px;
+  animation: ${fadeIn} 0.3s ease-out;
+
+  &:hover {
+    background: #f8f9fa;
+    border-radius: 8px;
+  }
+
+  .reply-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  .reply-author {
+    font-weight: 600;
+    color: ${props => props.theme.colors.primary};
+  }
+
+  .reply-badge {
+    background: #f1c40f;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+  }
+
+  .reply-date {
+    font-size: 0.85rem;
+    color: #95a5a6;
+  }
+
+  .reply-content {
+    color: #2c3e50;
+    line-height: 1.5;
+    font-size: 0.95rem;
   }
 `;
 
@@ -419,99 +592,6 @@ const ReviewImage = styled.img`
   object-fit: cover;
   border-radius: 8px;
   margin-top: 10px;
-`;
-
-const ReviewActions = styled.div`
-  display: flex;
-  gap: 15px;
-  margin-top: 10px;
-  
-  button {
-    background: none;
-    border: none;
-    color: #7f8c8d;
-    font-size: 0.9rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    padding: 5px;
-
-    &:hover {
-      color: #e67e22;
-    }
-  }
-`;
-
-const ReplyContainer = styled.div`
-  margin-left: 30px;
-  margin-top: 15px;
-  padding-left: 15px;
-  border-left: 2px solid #eee;
-`;
-
-const ReplyForm = styled.form`
-  margin-top: 15px;
-  display: flex;
-  gap: 10px;
-
-  textarea {
-    flex: 1;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    resize: none;
-    height: 60px;
-    font-size: 0.9rem;
-
-    &:focus {
-      outline: none;
-      border-color: #e67e22;
-    }
-  }
-
-  button {
-    padding: 0 20px;
-    background: #e67e22;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 0.9rem;
-
-    &:hover {
-      background: #d35400;
-    }
-  }
-`;
-
-const Reply = styled.div`
-  background: #f8f9fa;
-  padding: 15px;
-  border-radius: 8px;
-  margin-top: 10px;
-
-  .reply-header {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 8px;
-  }
-
-  .reply-author {
-    font-weight: 600;
-    color: #2c3e50;
-  }
-
-  .reply-date {
-    font-size: 0.8rem;
-    color: #7f8c8d;
-  }
-
-  .reply-content {
-    font-size: 0.9rem;
-    color: #34495e;
-    line-height: 1.5;
-  }
 `;
 
 const ReviewStats = styled.div`
@@ -596,6 +676,93 @@ const RatingBar = styled.div`
   }
 `;
 
+const MediaButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 15px;
+  border: none;
+  background: none;
+  color: #666;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #f8f9fa;
+    color: ${props => props.theme.colors.primary};
+  }
+
+  svg {
+    font-size: 1.2rem;
+  }
+`;
+
+const RatingSelect = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 5px;
+
+  svg {
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: ${props => props.theme.colors.primary};
+    opacity: 0.3;
+    transition: all 0.2s ease;
+
+    &.active {
+      opacity: 1;
+    }
+
+    &:hover {
+      transform: scale(1.1);
+    }
+  }
+`;
+
+const PostButton = styled.button`
+  padding: 8px 20px;
+  background: ${props => props.theme.colors.primary};
+  color: white;
+  border: none;
+  border-radius: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  opacity: ${props => props.disabled ? 0.5 : 1};
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background: #d35400;
+  }
+`;
+
+const ReviewContainer = styled.div`
+  max-width: 800px;
+  margin: 0 auto;
+
+  @media (max-width: 768px) {
+    .review-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .review-content {
+      font-size: 0.9rem;
+    }
+
+    .review-meta {
+      font-size: 0.8rem;
+    }
+  }
+`;
+
+const Category = styled.div`
+  color: #666;
+  margin-bottom: 10px;
+  text-align: center;
+`;
+
 function ReviewComponent({ review }) {
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [replyText, setReplyText] = useState('');
@@ -608,7 +775,8 @@ function ReviewComponent({ review }) {
         id: Date.now(),
         author: '봉봉카페',
         content: replyText,
-        date: new Date().toLocaleDateString()
+        date: new Date().toLocaleDateString(),
+        isAdmin: true
       };
       setReplies([...replies, newReply]);
       setReplyText('');
@@ -633,34 +801,53 @@ function ReviewComponent({ review }) {
       {review.image && <ReviewImage src={review.image} alt="리뷰 이미지" />}
       
       <ReviewActions>
-        <button onClick={() => setShowReplyForm(!showReplyForm)}>
+        <ActionButton onClick={() => setShowReplyForm(!showReplyForm)}>
           <FaReply /> 답글달기
-        </button>
+        </ActionButton>
       </ReviewActions>
 
-      {showReplyForm && (
-        <ReplyForm onSubmit={handleSubmitReply}>
-          <textarea
-            value={replyText}
-            onChange={(e) => setReplyText(e.target.value)}
-            placeholder="답글을 입력하세요..."
-          />
-          <button type="submit">등록</button>
-        </ReplyForm>
-      )}
-
-      {replies.length > 0 && (
-        <ReplyContainer>
+      {(showReplyForm || replies.length > 0) && (
+        <ReplySection>
           {replies.map(reply => (
             <Reply key={reply.id}>
               <div className="reply-header">
                 <span className="reply-author">{reply.author}</span>
+                {reply.isAdmin && <span className="reply-badge">관리자</span>}
                 <span className="reply-date">{reply.date}</span>
               </div>
               <div className="reply-content">{reply.content}</div>
             </Reply>
           ))}
-        </ReplyContainer>
+
+          {showReplyForm && (
+            <ReplyForm onSubmit={handleSubmitReply}>
+              <textarea
+                value={replyText}
+                onChange={(e) => setReplyText(e.target.value)}
+                placeholder="답글을 입력하세요..."
+              />
+              <div className="form-actions">
+                <button 
+                  type="button" 
+                  className="cancel"
+                  onClick={() => {
+                    setShowReplyForm(false);
+                    setReplyText('');
+                  }}
+                >
+                  취소
+                </button>
+                <button 
+                  type="submit" 
+                  className="submit"
+                  disabled={!replyText.trim()}
+                >
+                  답글 등록
+                </button>
+              </div>
+            </ReplyForm>
+          )}
+        </ReplySection>
       )}
     </ReviewCard>
   );
@@ -707,6 +894,101 @@ function ReviewStatsComponent({ reviews }) {
         ))}
       </RatingBars>
     </ReviewStats>
+  );
+}
+
+function WriteReview() {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [review, setReview] = useState('');
+  const [rating, setRating] = useState(0);
+  const [image, setImage] = useState(null);
+  const fileInputRef = useRef(null);
+
+  const handleFocus = () => {
+    setIsExpanded(true);
+  };
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImage(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSubmit = () => {
+    // 리뷰 제출 로직
+    console.log({ review, rating, image });
+    // 초기화
+    setReview('');
+    setRating(0);
+    setImage(null);
+    setIsExpanded(false);
+  };
+
+  return (
+    <WriteReviewCard>
+      <ReviewInput isExpanded={isExpanded}>
+        <div className="avatar">B</div>
+        <div className="input-area">
+          <ReviewTextArea
+            placeholder="이 상품에 대한 리뷰를 작성해주세요..."
+            value={review}
+            onChange={(e) => setReview(e.target.value)}
+            onFocus={handleFocus}
+            isExpanded={isExpanded}
+          />
+          {image && (
+            <div style={{ marginTop: '10px' }}>
+              <img 
+                src={image} 
+                alt="업로드 이미지" 
+                style={{ 
+                  maxWidth: '200px', 
+                  borderRadius: '8px',
+                  border: '1px solid #eee' 
+                }} 
+              />
+            </div>
+          )}
+        </div>
+      </ReviewInput>
+
+      {isExpanded && (
+        <ReviewActions isExpanded={isExpanded}>
+          <div style={{ display: 'flex', gap: '15px' }}>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImageUpload}
+              accept="image/*"
+              style={{ display: 'none' }}
+            />
+            <MediaButton onClick={() => fileInputRef.current.click()}>
+              <FaCamera /> 사진 추가
+            </MediaButton>
+            <RatingSelect>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <FaStarEmpty
+                  key={star}
+                  className={star <= rating ? 'active' : ''}
+                  onClick={() => setRating(star)}
+                />
+              ))}
+            </RatingSelect>
+          </div>
+          <PostButton 
+            disabled={!review.trim() || rating === 0}
+            onClick={handleSubmit}
+          >
+            리뷰 등록
+          </PostButton>
+        </ReviewActions>
+      )}
+    </WriteReviewCard>
   );
 }
 
@@ -832,6 +1114,9 @@ function ProductDetail() {
           <h2>{product.name}</h2>
           <p className="price">{product.price.toLocaleString()}원</p>
           <p className="description">{product.description}</p>
+          <Category>
+            {product.category}
+          </Category>
           <ButtonContainer>
             <BuyNowButton onClick={handleBuyNow}>
               바로 구매하기
@@ -995,6 +1280,7 @@ function ProductDetail() {
         <TabContent active={activeTab === 'review'}>
           <ReviewContainer>
             <ReviewStatsComponent reviews={reviewsData} />
+            <WriteReview />
             {reviewsData.map((review, index) => (
               <ReviewComponent key={index} review={review} />
             ))}

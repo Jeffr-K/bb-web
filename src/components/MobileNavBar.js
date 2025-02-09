@@ -139,14 +139,14 @@ const SubCategoryItem = styled.button`
   }
 `;
 
-function MobileNavBar({ categories = {}, categoryIcons = {}, subCategoryIcons = {}, onCategorySelect }) {
+function MobileNavBar({ categories, categoryIcons, subCategoryIcons, onCategorySelect }) {
   const [showCategories, setShowCategories] = useState(false);
   const [selectedMainCategory, setSelectedMainCategory] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
 
-  // 카테고리 메뉴 관련 렌더링은 props가 있을 때만 표시
-  const showCategoryMenu = Object.keys(categories).length > 0;
+  // 카테고리 메뉴 관련 렌더링은 categories가 배열일 때만 표시
+  const showCategoryMenu = Array.isArray(categories) && categories.length > 0;
 
   // 네비게이션 처리 함수
   const handleNavigation = (path) => {
@@ -160,18 +160,6 @@ function MobileNavBar({ categories = {}, categoryIcons = {}, subCategoryIcons = 
     setSelectedMainCategory(category === selectedMainCategory ? null : category);
     if (onCategorySelect) {
       onCategorySelect(category);
-      // 카테고리 섹션으로 스크롤
-      const element = document.getElementById('products-section');
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth' });
-      }
-    }
-  };
-
-  const handleSubCategoryClick = (subCategory) => {
-    if (onCategorySelect) {
-      onCategorySelect(selectedMainCategory, subCategory);
-      setShowCategories(false);
     }
   };
 
@@ -239,12 +227,11 @@ function MobileNavBar({ categories = {}, categoryIcons = {}, subCategoryIcons = 
         </NavList>
       </NavBarContainer>
 
-      {/* 카테고리 메뉴는 props가 있을 때만 렌더링 */}
       {showCategoryMenu && (
         <CategorySlideMenu show={showCategories}>
           <CategoryHeader>
             <button onClick={() => {
-              window.history.back();  // 뒤로가기 버튼 클릭 시 history.back() 호출
+              window.history.back();
             }}>
               <FaChevronLeft />
             </button>
@@ -252,25 +239,28 @@ function MobileNavBar({ categories = {}, categoryIcons = {}, subCategoryIcons = 
           </CategoryHeader>
           <CategoryContent>
             <MainCategories>
-              {Object.keys(categories).map(category => (
+              {categories.map(category => (
                 <MainCategoryItem
-                  key={category}
-                  active={category === selectedMainCategory}
-                  onClick={() => handleMainCategoryClick(category)}
+                  key={category.name}
+                  active={category.name === selectedMainCategory}
+                  onClick={() => handleMainCategoryClick(category.name)}
                 >
-                  {React.createElement(categoryIcons[category], {})}
-                  {category}
+                  {React.createElement(categoryIcons[category.name])}
+                  {category.name}
                 </MainCategoryItem>
               ))}
             </MainCategories>
-            {selectedMainCategory && categories[selectedMainCategory]?.length > 0 && (
+            {selectedMainCategory && categories.find(cat => cat.name === selectedMainCategory)?.subCategories?.length > 0 && (
               <SubCategories show={true}>
-                {categories[selectedMainCategory].map(subCategory => (
+                {categories.find(cat => cat.name === selectedMainCategory).subCategories.map(subCategory => (
                   <SubCategoryItem
                     key={subCategory}
-                    onClick={() => handleSubCategoryClick(subCategory)}
+                    onClick={() => {
+                      onCategorySelect(selectedMainCategory, subCategory);
+                      setShowCategories(false);
+                    }}
                   >
-                    {React.createElement(subCategoryIcons[subCategory], {})}
+                    {React.createElement(subCategoryIcons[subCategory])}
                     {subCategory}
                   </SubCategoryItem>
                 ))}
