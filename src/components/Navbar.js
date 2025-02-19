@@ -106,6 +106,11 @@ const Logo = styled(Link)`
   display: flex;
   align-items: center;
   gap: 0.5rem;
+
+  img {
+    width: 30px;
+    height: 30px;
+  }
 `;
 
 const NavLinks = styled.div`
@@ -204,7 +209,8 @@ function Navbar() {
 
         {/* 로고 */}
         <Logo to="/">
-          <FaCoffee /> 카페 봉봉
+          <img src="/assets/logo.jpeg" alt="봉봉카페 로고" />
+          카페 봉봉
         </Logo>
 
         {/* 데스크톱 메뉴 */}
@@ -286,4 +292,4 @@ function Navbar() {
   );
 }
 
-export default Navbar; 
+export default Navbar;
