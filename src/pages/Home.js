@@ -32,18 +32,58 @@ const Container = styled.div`
 
 const HeroSection = styled.div`
   height: 80vh;
-  background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
-    url('https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?ixlib=rb-4.0.3') center/cover;
   display: flex;
   align-items: center;
   justify-content: center;
-  text-align: center;
-  color: white;
   padding: 0 20px;
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    height: auto;
+    padding: 40px 20px;
+  }
+`;
+
+const LogoContainer = styled.div`
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  padding: 20px;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  @media (max-width: 768px) {
+    width: 100%;
+    height: 300px;
+  }
+`;
+
+const HeroContentContainer = styled.div`
+  flex: 1;
+  background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+    url('https://images.unsplash.com/photo-1511920170033-f8396924c348?ixlib=rb-4.0.3') center/cover no-repeat;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  @media (max-width: 768px) {
+    width: 100%;
+    height: 300px;
+  }
 `;
 
 const HeroContent = styled.div`
   animation: ${fadeIn} 1s ease-out;
+  color: white;
+  text-align: center;
+  padding: 20px;
 
   h1 {
     font-size: 3.5rem;
@@ -57,6 +97,16 @@ const HeroContent = styled.div`
     margin-bottom: 30px;
     max-width: 600px;
     line-height: 1.6;
+  }
+
+  @media (max-width: 768px) {
+    h1 {
+      font-size: 2.5rem;
+    }
+    
+    p {
+      font-size: 1rem;
+    }
   }
 `;
 
@@ -189,14 +239,19 @@ function Home() {
   return (
     <Container>
       <HeroSection>
-        <HeroContent>
-          <h1>카페 봉봉에 오신 것을 환영합니다</h1>
-          <p>
-            특별한 순간을 위한 특별한 카페,<br />
-            카페 봉봉과 함께하세요
-          </p>
-          <CTAButton to="/products">메뉴 보기</CTAButton>
-        </HeroContent>
+        <LogoContainer>
+          <img src="/assets/logo.jpeg" alt="카페 봉봉 로고" />
+        </LogoContainer>
+        <HeroContentContainer>
+          <HeroContent>
+            <h1>카페 봉봉에 오신 것을 환영합니다</h1>
+            <p>
+              특별한 순간을 위한 특별한 카페,<br />
+              카페 봉봉과 함께하세요
+            </p>
+            <CTAButton to="/products">메뉴 보기</CTAButton>
+          </HeroContent>
+        </HeroContentContainer>
       </HeroSection>
 
       <FeaturesSection>
@@ -236,7 +291,7 @@ function Home() {
             </div>
           </PromotionCard>
           <PromotionCard delay={0.4}>
-            <img src="https://images.unsplash.com/photo-1579888944880-d98341245702?ixlib=rb-4.0.3" alt="아이스 아메리카노" />
+            <img src="https://images.unsplash.com/photo-1534778101976-62847782c213?ixlib=rb-4.0.3" alt="아이스 아메리카노" />
             <div className="content">
               <h3>콜드브루 아메리카노</h3>
               <p>24시간 저온 추출한 깊은 풍미의 콜드브루</p>
@@ -257,4 +312,4 @@ function Home() {
   );
 }
 
-export default Home; 
+export default Home;

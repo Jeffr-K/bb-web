@@ -227,11 +227,11 @@ function MobileNavBar({ categories, categoryIcons, subCategoryIcons, onCategoryS
         </NavList>
       </NavBarContainer>
 
-      {showCategoryMenu && (
+      {categories && categories.length > 0 && (
         <CategorySlideMenu show={showCategories}>
           <CategoryHeader>
             <button onClick={() => {
-              window.history.back();
+              setShowCategories(false);
             }}>
               <FaChevronLeft />
             </button>
@@ -239,31 +239,37 @@ function MobileNavBar({ categories, categoryIcons, subCategoryIcons, onCategoryS
           </CategoryHeader>
           <CategoryContent>
             <MainCategories>
-              {categories.map(category => (
-                <MainCategoryItem
-                  key={category.name}
-                  active={category.name === selectedMainCategory}
-                  onClick={() => handleMainCategoryClick(category.name)}
-                >
-                  {React.createElement(categoryIcons[category.name])}
-                  {category.name}
-                </MainCategoryItem>
-              ))}
+              {categories.map(category => {
+                const Icon = categoryIcons[category.name];
+                return (
+                  <MainCategoryItem
+                    key={category.name}
+                    active={category.name === selectedMainCategory}
+                    onClick={() => handleMainCategoryClick(category.name)}
+                  >
+                    {Icon && <Icon />}
+                    {category.name}
+                  </MainCategoryItem>
+                );
+              })}
             </MainCategories>
             {selectedMainCategory && categories.find(cat => cat.name === selectedMainCategory)?.subCategories?.length > 0 && (
               <SubCategories show={true}>
-                {categories.find(cat => cat.name === selectedMainCategory).subCategories.map(subCategory => (
-                  <SubCategoryItem
-                    key={subCategory}
-                    onClick={() => {
-                      onCategorySelect(selectedMainCategory, subCategory);
-                      setShowCategories(false);
-                    }}
-                  >
-                    {React.createElement(subCategoryIcons[subCategory])}
-                    {subCategory}
-                  </SubCategoryItem>
-                ))}
+                {categories.find(cat => cat.name === selectedMainCategory).subCategories.map(subCategory => {
+                  const SubIcon = subCategoryIcons[subCategory];
+                  return (
+                    <SubCategoryItem
+                      key={subCategory}
+                      onClick={() => {
+                        onCategorySelect(selectedMainCategory, subCategory);
+                        setShowCategories(false);
+                      }}
+                    >
+                      {SubIcon && <SubIcon />}
+                      {subCategory}
+                    </SubCategoryItem>
+                  );
+                })}
               </SubCategories>
             )}
           </CategoryContent>

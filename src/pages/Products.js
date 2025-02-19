@@ -834,7 +834,6 @@ function Products() {
         )}
 
         <div>
-          <Title>카페 봉봉 상품</Title>
           {currentProducts.length > 0 ? (
             <ProductGrid>
               {currentProducts.map((product, index) => (

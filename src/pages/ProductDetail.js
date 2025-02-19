@@ -145,42 +145,22 @@ const Button = styled.button`
 `;
 
 const CartButton = styled(Button)`
-  background: #2c3e50;
-  color: white;
-  border: none;
+  background: transparent;
+  color: #2c3e50;
+  border: 1px solid black;
 
   &:hover {
-    background: #34495e;
+    background: #f5f5f5;
   }
 `;
 
-const BuyNowButton = styled(Button)`
+const BulkOrderButton = styled(Button)`
   background: #e74c3c;
   color: white;
   border: none;
 
   &:hover {
     background: #c0392b;
-  }
-`;
-
-const BulkOrderButton = styled.button`
-  background: #e67e22;
-  color: white;
-  border: none;
-  padding: 15px 30px;
-  font-size: 1.2rem;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  margin-top: 20px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-
-  &:hover {
-    background: #d35400;
-    transform: translateY(-2px);
   }
 `;
 
@@ -1029,11 +1009,6 @@ function ProductDetail() {
     });
   };
 
-  const handleBuyNow = () => {
-    addToCart(product);
-    navigate('/checkout');  // 바로 결제 페이지로 이동
-  };
-
   const scrollThumbnails = (direction) => {
     const slider = document.querySelector('#thumbnail-slider');
     const scrollAmount = direction === 'left' ? -100 : 100;
@@ -1084,6 +1059,21 @@ function ProductDetail() {
     }
   ];
 
+  const handleBuyNow = () => {
+    // 단일 상품 구매 처리
+    navigate('/checkout', { 
+      state: { 
+        products: [{
+          id: product.id,
+          name: product.name,
+          price: product.price || product.originalPrice,
+          image: images[0],
+          quantity: 1
+        }]
+      } 
+    });
+  };
+
   return (
     <PageContainer>
       <ProductDetailContainer>
@@ -1118,16 +1108,13 @@ function ProductDetail() {
             {product.category}
           </Category>
           <ButtonContainer>
-            <BuyNowButton onClick={handleBuyNow}>
-              바로 구매하기
-            </BuyNowButton>
+            <BulkOrderButton onClick={handleBulkOrder}>
+              단체 주문하기
+            </BulkOrderButton>
             <CartButton onClick={() => addToCart(product)}>
               <FaShoppingCart /> 장바구니
             </CartButton>
           </ButtonContainer>
-          <BulkOrderButton onClick={handleBulkOrder}>
-            <FaUsers /> 단체 주문 문의
-          </BulkOrderButton>
         </ProductInfo>
       </ProductDetailContainer>
 

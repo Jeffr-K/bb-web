@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FaShoppingCart, FaCoffee, FaHome, FaUser, FaBars, FaSearch } from 'react-icons/fa';
+import { FaShoppingCart, FaUser, FaBars, FaSearch } from 'react-icons/fa';
 import styled from 'styled-components';
 import LoginModal from './LoginModal';
 
@@ -215,8 +215,8 @@ function Navbar() {
 
         {/* 데스크톱 메뉴 */}
         <NavLinks className="desktop-menu">
-          <NavLink to="/"><FaHome /> 홈</NavLink>
-          <NavLink to="/products"><FaCoffee /> 상품</NavLink>
+          <NavLink to="/">홈</NavLink>
+          <NavLink to="/products">상품</NavLink>
           <NavLink to="/about">소개</NavLink>
           <NavLink to="/locations">매장</NavLink>
         </NavLinks>
@@ -268,8 +268,8 @@ function Navbar() {
                 </a>
               )}
             </li>
-            <li><Link to="/"><FaHome /> 홈</Link></li>
-            <li><Link to="/products"><FaCoffee /> 상품</Link></li>
+            <li><Link to="/">홈</Link></li>
+            <li><Link to="/products">상품</Link></li>
             <li><Link to="/about">소개</Link></li>
             <li><Link to="/locations">매장</Link></li>
           </MobileMenuList>
