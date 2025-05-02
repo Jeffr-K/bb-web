@@ -3,8 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@supabase/supabase-js": "^2.48.1",
     "@types/jspdf": "^2.0.0",
     "chart.js": "^4.4.7",
+    "cloudinary-react": "^1.8.1",
     "cra-template": "1.2.0",
     "date-fns": "^4.1.0",
     "html2canvas": "^1.4.1",
